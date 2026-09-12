@@ -127,6 +127,23 @@ class GeminiImageGenerator:
         logger.info("AI image generation unavailable or restricted. Creating 3-column educational infographic card sheet...")
         return self._create_fallback_infographic(title, output_path)
 
+    @staticmethod
+    def _get_font(size: int):
+        candidates = [
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            "C:/Windows/Fonts/meiryo.ttc",
+            "C:/Windows/Fonts/msgothic.ttc",
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                try:
+                    return ImageFont.truetype(p, size)
+                except Exception:
+                    pass
+        return ImageFont.load_default()
+
     def _create_fallback_infographic(self, title: str, output_path: Path) -> Path:
         """
         Renders a structured 3-column educational infographic visual summary
@@ -136,6 +153,11 @@ class GeminiImageGenerator:
         img = Image.new("RGB", (width, height), color=(240, 248, 247))
         draw = ImageDraw.Draw(img)
 
+        font_header = self._get_font(26)
+        font_badge = self._get_font(20)
+        font_sub = self._get_font(18)
+        font_body = self._get_font(15)
+
         # Outer decorative frame
         draw.rounded_rectangle([20, 20, width - 20, height - 20], radius=16, outline=(180, 215, 210), width=3)
 
@@ -143,7 +165,7 @@ class GeminiImageGenerator:
         draw.rounded_rectangle([220, 36, 1060, 100], radius=12, fill=(15, 76, 92))
         draw.rounded_rectangle([225, 41, 1055, 95], radius=10, outline=(255, 210, 63), width=2)
         display_title = (title[:32] + "...") if len(title) > 32 else title
-        draw.text((260, 52), f"【研究図解】 {display_title}", fill=(255, 255, 255))
+        draw.text((260, 48), f"【研究図解】 {display_title}", fill=(255, 255, 255), font=font_header)
 
         # Column settings
         col_width = 370
@@ -154,14 +176,14 @@ class GeminiImageGenerator:
         # Column 1: 背景・教育データの視覚化
         x1 = x_positions[0]
         draw.rounded_rectangle([x1, y_top, x1 + col_width, y_top + col_height], radius=12, fill=(255, 255, 255), outline=(220, 230, 230), width=2)
-        draw.rounded_rectangle([x1 + 15, y_top + 15, x1 + 240, y_top + 50], radius=18, fill=(247, 127, 0))
-        draw.text((x1 + 30, y_top + 23), "1. 概念・データの視覚化", fill=(255, 255, 255))
+        draw.rounded_rectangle([x1 + 15, y_top + 15, x1 + 250, y_top + 52], radius=18, fill=(247, 127, 0))
+        draw.text((x1 + 28, y_top + 20), "1. 概念・データの視覚化", fill=(255, 255, 255), font=font_badge)
         # Visual elements: Card A (Radar Chart representation)
         draw.rounded_rectangle([x1 + 20, y_top + 65, x1 + col_width - 20, y_top + 200], radius=8, fill=(248, 250, 252), outline=(203, 213, 225))
-        draw.text((x1 + 35, y_top + 75), "個人の成長・進捗推移", fill=(30, 41, 59))
+        draw.text((x1 + 35, y_top + 75), "個人の成長・進捗推移", fill=(30, 41, 59), font=font_sub)
         draw.polygon([(x1 + 100, y_top + 130), (x1 + 140, y_top + 110), (x1 + 170, y_top + 140), (x1 + 150, y_top + 180), (x1 + 90, y_top + 170)], outline=(14, 165, 233), width=2)
-        draw.rounded_rectangle([x1 + 250, y_top + 120, x1 + 330, y_top + 155], radius=6, fill=(16, 185, 129))
-        draw.text((x1 + 262, y_top + 130), "達成 92%", fill=(255, 255, 255))
+        draw.rounded_rectangle([x1 + 240, y_top + 120, x1 + 335, y_top + 158], radius=6, fill=(16, 185, 129))
+        draw.text((x1 + 250, y_top + 128), "達成 92%", fill=(255, 255, 255), font=font_body)
         # Card B (Student tablet interaction)
         draw.rounded_rectangle([x1 + 20, y_top + 215, x1 + col_width - 20, y_top + 360], radius=8, fill=(240, 253, 250), outline=(153, 246, 228))
         draw.text((x1 + 35, y_top + 230), "生徒の端末活用・思考傾向", fill=(15, 118, 110))
