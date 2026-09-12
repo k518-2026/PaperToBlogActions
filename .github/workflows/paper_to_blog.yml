@@ -1,9 +1,9 @@
 name: Auto Post Research Papers to WordPress
 
 on:
-  # Daily scheduled run (23:00 UTC = 08:00 AM JST)
+  # Daily scheduled run (10:00 UTC = 19:00 JST / 毎晩19時)
   schedule:
-    - cron: '0 23 * * *'
+    - cron: '0 10 * * *'
 
   # Manual execution from GitHub Actions UI
   workflow_dispatch:
