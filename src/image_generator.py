@@ -36,6 +36,8 @@ class GeminiImageGenerator:
         """
         Generate a comprehensive 1-sheet Japanese educational infographic poster.
         """
+        from google.genai import types
+
         title = summary_data.get("infographic_title") or summary_data.get("blog_title", "教育研究まとめ")
         col1 = summary_data.get("infographic_col1", "Background, computational thinking metrics, student with tablet, radar charts")
         col2 = summary_data.get("infographic_col2", "Classroom practice, teacher coaching student, active learning, interactive software")
@@ -46,7 +48,7 @@ class GeminiImageGenerator:
         refined_prompt = (
             f"A detailed Japanese educational infographic illustration and graphic recording poster summarizing: '{title}'. "
             f"Layout structure: 16:9 widescreen composition with 3 clearly defined vertical panels and a prominent top header banner. "
-            f"Top Header: A decorative dark blue/teal banner ribbon with Japanese calligraphy-style headline. "
+            f"Top Header: A decorative dark blue/teal banner ribbon with Japanese headline. "
             f"Panel 1 (Left): ① Background and Concept Visualization: {col1}. Include a student in school uniform using a digital tablet, colorful educational data charts (radar chart, progress line graph), and metric badges. "
             f"Panel 2 (Center): ② Classroom Practice and Practical Scenes: {col2}. Include a friendly Japanese teacher advising a student, classroom collaboration, interactive learning screen, and speech callout bubbles. "
             f"Panel 3 (Right): ③ Key Findings and Essential Guidelines: {col3}. Include security shield and lock icons, a balance scale comparing quantitative and qualitative factors, and warm smiling characters. "
@@ -54,55 +56,76 @@ class GeminiImageGenerator:
             f"Additional context: {base_prompt}"
         )
 
-        logger.info(f"Generating 1-sheet infographic illustration with prompt: {refined_prompt[:140]}...")
+        logger.info(f"Generating 1-sheet infographic illustration: {refined_prompt[:140]}...")
 
-        # Strategy 1: Try client.interactions.create (Gemini 3.1 Flash Image)
+        # Strategy 1: generate_content with response_modalities=["IMAGE"] (Gemini 3.1 Flash Image)
+        for img_model in [self.model_name, "gemini-3.1-flash-image", "gemini-3-pro-image-preview"]:
+            try:
+                logger.info(f"Attempting image generation via generate_content ({img_model})...")
+                response = self.client.models.generate_content(
+                    model=img_model,
+                    contents=refined_prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE"],
+                        image_config=types.ImageConfig(aspect_ratio="16:9")
+                    )
+                )
+                if hasattr(response, "parts") and response.parts:
+                    for part in response.parts:
+                        if getattr(part, "inline_data", None):
+                            output_path.parent.mkdir(parents=True, exist_ok=True)
+                            gen_img = part.as_image()
+                            gen_img.save(output_path)
+                            logger.info(f"Successfully generated infographic via generate_content ({img_model}): {output_path}")
+                            return output_path
+            except Exception as e:
+                logger.warning(f"generate_content with {img_model} failed: {e}")
+
+        # Strategy 2: Interactions API with response_modalities=['IMAGE']
         try:
-            logger.info(f"Attempting infographic generation via interactions API ({self.model_name})...")
+            logger.info("Attempting infographic generation via interactions API...")
             interaction = self.client.interactions.create(
                 model=self.model_name,
-                input=refined_prompt
+                input=refined_prompt,
+                response_modalities=["IMAGE"]
             )
-            if hasattr(interaction, "output_image") and interaction.output_image:
-                image_data = interaction.output_image.data
-                image_bytes = base64.b64decode(image_data) if isinstance(image_data, str) else image_data
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, "wb") as f:
-                    f.write(image_bytes)
-                logger.info(f"Successfully generated infographic via interactions API: {output_path}")
-                return output_path
+            for out in getattr(interaction, "outputs", []):
+                if getattr(out, "type", "") == "image" and hasattr(out, "data"):
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    img_bytes = base64.b64decode(out.data) if isinstance(out.data, str) else out.data
+                    with open(output_path, "wb") as f:
+                        f.write(img_bytes)
+                    logger.info(f"Successfully generated infographic via interactions API: {output_path}")
+                    return output_path
         except Exception as e:
-            logger.warning(f"Interactions image generation failed: {e}. Trying Imagen 3...")
+            logger.warning(f"Interactions image generation failed: {e}")
 
-        # Strategy 2: Try client.models.generate_images (Imagen 3)
-        try:
-            logger.info("Attempting infographic generation via models.generate_images (imagen-3.0-generate-002)...")
-            result = self.client.models.generate_images(
-                model="imagen-3.0-generate-002",
-                prompt=refined_prompt,
-                config={
-                    "number_of_images": 1,
-                    "output_mime_type": "image/png",
-                    "aspect_ratio": "16:9"
-                }
-            )
-            if result.generated_images:
-                img_bytes = result.generated_images[0].image.image_bytes
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, "wb") as f:
-                    f.write(img_bytes)
-                logger.info(f"Successfully generated infographic via Imagen 3: {output_path}")
-                return output_path
-        except Exception as e:
-            logger.warning(f"Imagen 3 generation failed: {e}. Falling back to 3-column infographic generator...")
+        # Strategy 3: Imagen 3 / 4 (models.generate_images)
+        for imagen_model in ["imagen-3.0-generate-002", "imagen-4.0-generate-001"]:
+            try:
+                logger.info(f"Attempting infographic generation via models.generate_images ({imagen_model})...")
+                result = self.client.models.generate_images(
+                    model=imagen_model,
+                    prompt=refined_prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        output_mime_type="image/jpeg",
+                        aspect_ratio="16:9"
+                    )
+                )
+                if result.generated_images:
+                    img_bytes = result.generated_images[0].image.image_bytes
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(output_path, "wb") as f:
+                        f.write(img_bytes)
+                    logger.info(f"Successfully generated infographic via {imagen_model}: {output_path}")
+                    return output_path
+            except Exception as e:
+                logger.warning(f"{imagen_model} generation failed: {e}")
 
-        # Strategy 3: Graceful fallback - render a structured 3-column infographic card sheet
-        try:
-            logger.info("Creating fallback 3-column educational infographic card sheet...")
-            return self._create_fallback_infographic(title, output_path)
-        except Exception as e:
-            logger.error(f"Fallback infographic creation failed: {e}")
-            return None
+        # Strategy 4: Fallback Pillow 3-column infographic
+        logger.info("AI image generation unavailable or restricted. Creating 3-column educational infographic card sheet...")
+        return self._create_fallback_infographic(title, output_path)
 
     def _create_fallback_infographic(self, title: str, output_path: Path) -> Path:
         """
