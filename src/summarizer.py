@@ -82,7 +82,7 @@ class PaperSummarizer:
    - 全体スタイル: 日本の教育教材・学習マンガ・グラレコ風の親しみやすい図解イラスト、清潔感のある配色、丸角カードパネル、アスペクト比 16:9。
 """
 
-    def __init__(self, api_key: str, model_name: str = "gemini-3.7-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-3.6-flash"):
         self.api_key = api_key
         self.model_name = model_name
         self._client = None
@@ -116,10 +116,10 @@ URL: {paper.get('url')}
 {paper.get('abstract')}
 """
 
-        models_to_try = [self.model_name]
-        for fallback in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]:
-            if fallback not in models_to_try:
-                models_to_try.append(fallback)
+        models_to_try = []
+        for m in [self.model_name, "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite"]:
+            if m and m not in models_to_try:
+                models_to_try.append(m)
 
         last_error = None
         for model in models_to_try:
