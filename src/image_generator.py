@@ -44,19 +44,22 @@ class GeminiImageGenerator:
         col3 = summary_data.get("infographic_col3", "Key findings, security icons, qualitative and quantitative balance, educational guidelines")
         base_prompt = summary_data.get("infographic_prompt", "")
 
-        # Formulate explicit visual prompt replicating the user's sample style
+        # Formulate explicit visual prompt starting with clear generative command
+        # (avoiding trigger keywords that activate safety filters for minors/anime)
         refined_prompt = (
-            f"A detailed Japanese educational infographic illustration and graphic recording poster summarizing: '{title}'. "
-            f"Layout structure: 16:9 widescreen composition with 3 clearly defined vertical panels and a prominent top header banner. "
-            f"Top Header: A decorative dark blue/teal banner ribbon with Japanese headline. "
-            f"Panel 1 (Left): ① Background and Concept Visualization: {col1}. Include a student in school uniform using a digital tablet, colorful educational data charts (radar chart, progress line graph), and metric badges. "
-            f"Panel 2 (Center): ② Classroom Practice and Practical Scenes: {col2}. Include a friendly Japanese teacher advising a student, classroom collaboration, interactive learning screen, and speech callout bubbles. "
-            f"Panel 3 (Right): ③ Key Findings and Essential Guidelines: {col3}. Include security shield and lock icons, a balance scale comparing quantitative and qualitative factors, and warm smiling characters. "
-            f"Art Style: Clean Japanese educational manga and textbook illustration style, cute anime characters, soft clean outlines, modern flat colors, rounded rectangular card frames with thin borders, teal and soft pastel background palette. Highly structured and easy to read. "
+            f"Generate an image: A clean, high-resolution educational infographic illustration and graphic recording poster summarizing academic research: '{title}'. "
+            f"Layout structure: 16:9 widescreen composition with 3 clearly defined vertical card panels and a prominent top title banner ribbon. "
+            f"Top Header: A decorative dark blue/teal banner ribbon with clear headline. "
+            f"Panel 1 (Left): ① Theoretical background & metrics: {col1}. Include a learner using a digital tablet, colorful educational data charts (radar chart, progress line graph), and achievement rate badges. "
+            f"Panel 2 (Center): ② Classroom pedagogical practices: {col2}. Include a teacher guiding a learner, active learning collaboration, interactive educational software interface, and thought bubbles. "
+            f"Panel 3 (Right): ③ Key findings and essential guidelines: {col3}. Include security shield icons, a balance scale comparing quantitative and qualitative factors, and helpful educational icons. "
+            f"Visual Art Style: Modern Japanese educational graphic recording diagram, clean vector art, soft clean outlines, modern flat pastel colors, rounded rectangular cards with thin borders, light teal and cream background. Highly structured, professional and educational. "
             f"Additional context: {base_prompt}"
         )
 
         logger.info(f"Generating 1-sheet infographic illustration: {refined_prompt[:140]}...")
+
+        debug_logs = []
 
         # Model candidates for Gemini native image generation
         models_to_try = []
@@ -77,11 +80,16 @@ class GeminiImageGenerator:
                         image_config=types.ImageConfig(aspect_ratio="16:9")
                     )
                 )
-                if self._extract_and_save_image(response, output_path):
+                if self._extract_and_save_image(response, output_path, debug_logs):
                     logger.info(f"Successfully generated infographic via generate_content ({img_model}): {output_path}")
+                    self._save_debug_log(debug_logs, output_path)
                     return output_path
+                else:
+                    debug_logs.append(f"{img_model} (config): API call completed but no image binary was found in response.")
             except Exception as e:
-                logger.warning(f"generate_content with {img_model} (config) failed: {e}")
+                err_msg = f"{img_model} (config) failed: {type(e).__name__} - {e}"
+                logger.warning(err_msg)
+                debug_logs.append(err_msg)
 
             # 1b. Try without config (canonical simple pattern)
             try:
@@ -90,11 +98,16 @@ class GeminiImageGenerator:
                     model=img_model,
                     contents=[refined_prompt]
                 )
-                if self._extract_and_save_image(response, output_path):
+                if self._extract_and_save_image(response, output_path, debug_logs):
                     logger.info(f"Successfully generated infographic via generate_content ({img_model}) [simple]: {output_path}")
+                    self._save_debug_log(debug_logs, output_path)
                     return output_path
+                else:
+                    debug_logs.append(f"{img_model} (simple): API call completed but no image binary was found in response.")
             except Exception as e:
-                logger.warning(f"generate_content with {img_model} (simple) failed: {e}")
+                err_msg = f"{img_model} (simple) failed: {type(e).__name__} - {e}"
+                logger.warning(err_msg)
+                debug_logs.append(err_msg)
 
         # Strategy 2: Interactions API with response_modalities=['IMAGE']
         try:
@@ -111,9 +124,13 @@ class GeminiImageGenerator:
                     with open(output_path, "wb") as f:
                         f.write(img_bytes)
                     logger.info(f"Successfully generated infographic via interactions API: {output_path}")
+                    self._save_debug_log(debug_logs, output_path)
                     return output_path
+            debug_logs.append("Interactions API completed but returned no image outputs.")
         except Exception as e:
-            logger.warning(f"Interactions image generation failed: {e}")
+            err_msg = f"Interactions image generation failed: {type(e).__name__} - {e}"
+            logger.warning(err_msg)
+            debug_logs.append(err_msg)
 
         # Strategy 3: Imagen models (models.generate_images)
         for imagen_model in ["imagen-3.0-generate-002", "imagen-4.0-generate-001"]:
@@ -134,23 +151,53 @@ class GeminiImageGenerator:
                     with open(output_path, "wb") as f:
                         f.write(img_bytes)
                     logger.info(f"Successfully generated infographic via {imagen_model}: {output_path}")
+                    self._save_debug_log(debug_logs, output_path)
                     return output_path
+                else:
+                    debug_logs.append(f"{imagen_model}: API call completed but generated_images was empty.")
             except Exception as e:
-                logger.warning(f"{imagen_model} generation failed: {e}")
+                err_msg = f"{imagen_model} generation failed: {type(e).__name__} - {e}"
+                logger.warning(err_msg)
+                debug_logs.append(err_msg)
 
         # Strategy 4: Fallback Pillow 3-column infographic
         logger.info("AI image generation unavailable or restricted. Creating 3-column educational infographic card sheet...")
+        self._save_debug_log(debug_logs, output_path)
         return self._create_fallback_infographic(title, output_path)
 
     @staticmethod
-    def _extract_and_save_image(response, output_path: Path) -> bool:
+    def _save_debug_log(debug_logs: list, output_path: Path):
+        """Save image generation diagnostics log for inspection in artifacts."""
+        try:
+            log_file = output_path.parent / "image_generation_debug.txt"
+            with open(log_file, "w", encoding="utf-8") as f:
+                f.write("=== Gemini Image Generation Diagnostic Log ===\n")
+                for entry in debug_logs:
+                    f.write(f"- {entry}\n")
+        except Exception:
+            pass
+
+    @staticmethod
+    def _extract_and_save_image(response, output_path: Path, debug_logs: list = None) -> bool:
         """Helper to reliably extract and save image from SDK response candidates or parts."""
         # Check candidates first
         candidates = getattr(response, "candidates", None) or []
         for cand in candidates:
+            finish_reason = getattr(cand, "finish_reason", None)
+            if finish_reason and finish_reason != "STOP":
+                msg = f"Candidate finish_reason: {finish_reason}"
+                logger.warning(msg)
+                if debug_logs is not None:
+                    debug_logs.append(msg)
             content = getattr(cand, "content", None)
             parts = getattr(content, "parts", None) or []
             for part in parts:
+                if getattr(part, "text", None):
+                    snippet = part.text[:120].replace('\n', ' ')
+                    msg = f"Candidate returned text part: {snippet}"
+                    logger.info(msg)
+                    if debug_logs is not None:
+                        debug_logs.append(msg)
                 if getattr(part, "inline_data", None):
                     try:
                         gen_img = part.as_image()
@@ -252,18 +299,18 @@ class GeminiImageGenerator:
         draw.text((x1 + 250, y_top + 128), "達成 92%", fill=(255, 255, 255), font=font_body)
         # Card B (Student tablet interaction)
         draw.rounded_rectangle([x1 + 20, y_top + 215, x1 + col_width - 20, y_top + 360], radius=8, fill=(240, 253, 250), outline=(153, 246, 228))
-        draw.text((x1 + 35, y_top + 230), "生徒の端末活用・思考傾向", fill=(15, 118, 110))
+        draw.text((x1 + 35, y_top + 230), "生徒の端末活用・思考傾向", fill=(15, 118, 110), font=font_sub)
         draw.rounded_rectangle([x1 + 40, y_top + 265, x1 + 120, y_top + 335], radius=8, fill=(13, 148, 136))
-        draw.text((x1 + 55, y_top + 290), "Tablet", fill=(255, 255, 255))
-        draw.text((x1 + 135, y_top + 275), "・リアルタイム把握\n・弱点の早期発見\n・個別最適な支援", fill=(51, 65, 85))
+        draw.text((x1 + 55, y_top + 290), "Tablet", fill=(255, 255, 255), font=font_sub)
+        draw.text((x1 + 135, y_top + 275), "・リアルタイム把握\n・弱点の早期発見\n・個別最適な支援", fill=(51, 65, 85), font=font_body)
         # Card C (Key points)
-        draw.text((x1 + 35, y_top + 380), "【要点】データに基づく\n学習者の思考プロセスの可視化", fill=(71, 85, 105))
+        draw.text((x1 + 35, y_top + 380), "【要点】データに基づく\n学習者の思考プロセスの可視化", fill=(71, 85, 105), font=font_sub)
 
         # Column 2: 現場での授業活用シーン
         x2 = x_positions[1]
         draw.rounded_rectangle([x2, y_top, x2 + col_width, y_top + col_height], radius=12, fill=(255, 255, 255), outline=(220, 230, 230), width=2)
-        draw.rounded_rectangle([x2 + 15, y_top + 15, x2 + 240, y_top + 50], radius=18, fill=(42, 157, 143))
-        draw.text((x2 + 30, y_top + 23), "2. 授業・現場の活用シーン", fill=(255, 255, 255))
+        draw.rounded_rectangle([x2 + 15, y_top + 15, x2 + 270, y_top + 50], radius=18, fill=(42, 157, 143))
+        draw.text((x2 + 25, y_top + 23), "2. 授業・現場の活用シーン", fill=(255, 255, 255), font=font_badge)
         scenes = [
             ("1. 個別指導・対話", "生徒ごとのニーズに応じた段階的フィードバック"),
             ("2. 授業改善の計画", "理解度データに応じたカリキュラム最適化"),
@@ -273,15 +320,15 @@ class GeminiImageGenerator:
         y_scene = y_top + 70
         for s_title, s_desc in scenes:
             draw.rounded_rectangle([x2 + 20, y_scene, x2 + col_width - 20, y_scene + 75], radius=8, fill=(248, 250, 252), outline=(226, 232, 240))
-            draw.text((x2 + 35, y_scene + 10), s_title, fill=(30, 41, 59))
-            draw.text((x2 + 35, y_scene + 35), s_desc[:24], fill=(100, 116, 139))
+            draw.text((x2 + 35, y_scene + 10), s_title, fill=(30, 41, 59), font=font_sub)
+            draw.text((x2 + 35, y_scene + 35), s_desc[:24], fill=(100, 116, 139), font=font_body)
             y_scene += 90
 
         # Column 3: 成果と実践の留意点
         x3 = x_positions[2]
         draw.rounded_rectangle([x3, y_top, x3 + col_width, y_top + col_height], radius=12, fill=(255, 255, 255), outline=(220, 230, 230), width=2)
-        draw.rounded_rectangle([x3 + 15, y_top + 15, x3 + 240, y_top + 50], radius=18, fill=(231, 111, 81))
-        draw.text((x3 + 30, y_top + 23), "3. 成果と実践の留意点", fill=(255, 255, 255))
+        draw.rounded_rectangle([x3 + 15, y_top + 15, x3 + 270, y_top + 50], radius=18, fill=(231, 111, 81))
+        draw.text((x3 + 25, y_top + 23), "3. 成果と実践の留意点", fill=(255, 255, 255), font=font_badge)
         points = [
             ("1. プライバシーと保護", "学習履歴の安全な管理と倫理的配慮"),
             ("2. 定量と定性の調和", "数値データだけでなく生徒の観察を重視"),
@@ -291,8 +338,8 @@ class GeminiImageGenerator:
         y_point = y_top + 70
         for p_title, p_desc in points:
             draw.rounded_rectangle([x3 + 20, y_point, x3 + col_width - 20, y_point + 75], radius=8, fill=(255, 251, 235), outline=(254, 215, 170))
-            draw.text((x3 + 35, y_point + 10), p_title, fill=(154, 52, 18))
-            draw.text((x3 + 35, y_point + 35), p_desc[:24], fill=(120, 53, 15))
+            draw.text((x3 + 35, y_point + 10), p_title, fill=(154, 52, 18), font=font_sub)
+            draw.text((x3 + 35, y_point + 35), p_desc[:24], fill=(120, 53, 15), font=font_body)
             y_point += 90
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
