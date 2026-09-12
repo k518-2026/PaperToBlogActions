@@ -124,6 +124,7 @@ URL: {paper.get('url')}
         last_error = None
         for model in models_to_try:
             logger.info(f"Attempting Gemini summarization with model: {model}")
+            # Method 1: generate_content
             try:
                 response = self.client.models.generate_content(
                     model=model,
@@ -140,7 +141,25 @@ URL: {paper.get('url')}
                 logger.info(f"Successfully summarized paper using model: {model}")
                 return self._post_process_links(summary)
             except Exception as e:
-                logger.warning(f"Summarization with {model} failed: {e}")
+                logger.warning(f"generate_content with {model} failed: {e}. Trying interactions API...")
+                # Method 2: interactions API fallback
+                try:
+                    interaction = self.client.interactions.create(
+                        model=model,
+                        input=f"{self.SYSTEM_INSTRUCTION}\n\n{prompt_content}"
+                    )
+                    text_out = getattr(interaction, "output_text", None) or ""
+                    # Extract JSON block if surrounded by markdown code fences
+                    if "```json" in text_out:
+                        text_out = text_out.split("```json")[1].split("```")[0].strip()
+                    elif "```" in text_out:
+                        text_out = text_out.split("```")[1].split("```")[0].strip()
+                    result_dict = json.loads(text_out)
+                    summary = PaperSummaryModel(**result_dict)
+                    logger.info(f"Successfully summarized paper using interactions API ({model})")
+                    return self._post_process_links(summary)
+                except Exception as e2:
+                    logger.warning(f"Interactions API with {model} failed: {e2}")
                 last_error = e
 
         logger.error(f"All Gemini models failed for summarization. Last error: {last_error}")
