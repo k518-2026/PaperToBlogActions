@@ -1,0 +1,69 @@
+# PaperToBlogActions プロジェクト全記録・運用ガイド
+
+本ドキュメントは、学術論文自動要約・インフォグラフィック生成・WordPress自動投稿システム（`PaperToBlogActions`）の開発経緯、トラブルシューティング、および運用手順を網羅した記録です。
+
+---
+
+## 1. プロジェクト基本情報
+
+- **リポジトリ**: [k518-2026/PaperToBlogActions](https://github.com/k518-2026/PaperToBlogActions.git)
+- **稼働環境**: GitHub Actions（完全サーバーレス自動運用）
+- **定期実行**: 毎日 **日本時間 19:00（UTC 10:00）**
+- **対象分野**: 初等・中等教育、情報教育、プログラミング教育、コンピュテーショナル・シンキング
+
+---
+
+## 2. 実装した主要機能と課題解決
+
+### (1) 被引用数優先の論文取得 & 二重投稿防止
+- **機能**: OpenAlex APIより引用数降順で候補論文を取得し、教育界で注目されている重要論文を優先選定。
+- **履歴管理**: 投稿済みの論文ID/URLを `data/posted_papers.json` およびマークダウン表 `data/POSTED_PAPERS.md` に自動蓄積。ワークフロー実行後にGitHubへ自動コミット＆プッシュ。
+
+### (2) 落合式7観点要約（各観点150〜300文字）
+- **構成**:
+  1. 💡 どんなもの？
+  2. ✨ 先行研究と比べてどこがすごいの？
+  3. 🔑 技術や手法の"キモ"はどこにある？
+  4. 📊 どうやって有効だと検証した？
+  5. 💬 議論はあるか？
+  6. 📖 次に読むべき論文はあるか？
+  7. 📑 論文情報・リンク（APA式引用）
+- **文字数厳格化**: 各観点150〜300字をプロンプトおよびPydanticスキーマで厳格に担保。
+
+### (3) Wikipediaリンク実在検証（リンク切れ404完全防止）
+- **背景**: Geminiが付与する専門用語リンク（例: `コンピュテーショナル・シンキング`、`プログラミング教育` など）について、日本語版Wikipediaに単独記事が存在せず「項目がありません」（404）となる事象が発生。
+- **解決策**:
+  - `WikipediaValidator` クラスを実装し、MediaWiki API（`https://ja.wikipedia.org/w/api.php?action=query&titles=...&redirects=1`）と連携。
+  - **実在記事**: 正規化URL（別タブ表示 `target="_blank"` 付き）でリンクを維持。転送ページ（例: `Scratch` → `スクラッチ`）も自動追跡。
+  - **非実在記事**: `<a>` タグを自動除去し、本文用語のみをプレーンテキストとして自然に残す。
+
+### (4) 1枚の教育インフォグラフィック生成 & クォータ対応
+- **デザイン構成**:
+  - ヘッダー帯: 論文の核心テーマ
+  - 左カラム ①: 概念・データの可視化（生徒キャラクター、タブレット、チャート等）
+  - 中央カラム ②: 授業現場での活用シーン（個別指導対話、協調学習）
+  - 右カラム ③: 成果と留意点（セキュリティ、定性・定量バランス）
+- **画像生成エラー対策（フォールバック網）**:
+  - Google AI Studio無料枠では画像モデルのクォータ上限が0（`429 RESOURCE_EXHAUSTED`）となるため、以下の多重フォールバックを実装：
+    1. Gemini画像生成API（課金有効キー設定時に自動稼働）
+    2. 無料AI画像生成（Pollinations FLUX）
+    3. NotoSansCJKフォントを用いた Pillow 高品質グラフィックカード（文字化け「□□」対策済み）
+
+### (5) 投稿スケジュール設定
+- 日本時間 毎晩19:00（UTC 10:00）に自動実行されるよう `.github/workflows/paper_to_blog.yml` の cron を `0 10 * * *` に設定。
+
+---
+
+## 3. 運用・保守手順
+
+### APIキー・パスワードの更新
+GitHubリポジトリの **[Settings > Secrets and variables > Actions](https://github.com/k518-2026/PaperToBlogActions/settings/secrets/actions)** からいつでも変更可能です：
+- `GEMINI_API_KEY`: Google Gemini APIキー
+- `WP_POST_EMAIL`: WordPress投稿受信用メールアドレス
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`: 送信用SMTP設定
+
+### 手動テスト（Dry-run）の実行方法
+1. GitHubの **「Actions」** タブを開く。
+2. **「Auto Post Research Papers to WordPress」** ワークフローを選択。
+3. **「Run workflow」** プルダウンを開き、`dry_run: true` を選んで実行。
+   - メール送信を行わずに、要約本文やインフォグラフィック生成、Wikipediaリンク検証の結果を確認できます。
