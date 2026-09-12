@@ -109,13 +109,13 @@ class GeminiImageGenerator:
                 logger.warning(err_msg)
                 debug_logs.append(err_msg)
 
-        # Strategy 2: Interactions API with response_modalities=['IMAGE']
+        # Strategy 2: Interactions API with response_modalities=['image']
         try:
             logger.info("Attempting infographic generation via interactions API...")
             interaction = self.client.interactions.create(
                 model=self.model_name or "gemini-3.1-flash-image",
                 input=refined_prompt,
-                response_modalities=["IMAGE"]
+                response_modalities=["image"]
             )
             for out in getattr(interaction, "outputs", []):
                 if getattr(out, "type", "") == "image" and hasattr(out, "data"):
@@ -160,7 +160,38 @@ class GeminiImageGenerator:
                 logger.warning(err_msg)
                 debug_logs.append(err_msg)
 
-        # Strategy 4: Fallback Pillow 3-column infographic
+        # Strategy 4: Free AI Infographic Generator Fallback (Pollinations.ai / FLUX)
+        # Enables genuine AI-generated illustrations even when Google AI Studio API key is on Free Tier (limit: 0)
+        try:
+            logger.info("Attempting free AI infographic generation via Pollinations (FLUX)...")
+            import urllib.parse
+            import requests
+
+            flux_prompt = (
+                f"An aesthetic Japanese educational infographic illustration and graphic recording poster summarizing: {title}. "
+                f"Three distinct vertical panel columns with educational charts, diagrams, digital learning tablet, and teacher guidance, "
+                f"clean vector illustration, modern flat pastel colors, highly detailed, 16:9 widescreen composition."
+            )
+            encoded = urllib.parse.quote(flux_prompt)
+            api_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1280&height=720&model=flux&nologo=true"
+            
+            resp = requests.get(api_url, timeout=35, headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200 and len(resp.content) > 10000:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_path, "wb") as f:
+                    f.write(resp.content)
+                logger.info(f"Successfully generated AI infographic via Pollinations FLUX ({len(resp.content)} bytes): {output_path}")
+                debug_logs.append(f"Pollinations FLUX AI: Success ({len(resp.content)} bytes)")
+                self._save_debug_log(debug_logs, output_path)
+                return output_path
+            else:
+                debug_logs.append(f"Pollinations FLUX returned status {resp.status_code}")
+        except Exception as e:
+            err_msg = f"Pollinations FLUX generation failed: {type(e).__name__} - {e}"
+            logger.warning(err_msg)
+            debug_logs.append(err_msg)
+
+        # Strategy 5: Fallback Pillow 3-column infographic
         logger.info("AI image generation unavailable or restricted. Creating 3-column educational infographic card sheet...")
         self._save_debug_log(debug_logs, output_path)
         return self._create_fallback_infographic(title, output_path)
