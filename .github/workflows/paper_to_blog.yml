@@ -81,6 +81,16 @@ jobs:
           echo "Executing: python -m src.main $ARGS"
           python -m src.main $ARGS
 
+      - name: Upload Post & Infographic Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-post-assets
+          path: |
+            temp/eyecatch.png
+            temp/preview_post.html
+          if-no-files-found: ignore
+
       - name: Commit & Push Updated History
         if: ${{ inputs.dry_run != true && github.event.inputs.dry_run != 'true' }}
         run: |
@@ -94,3 +104,4 @@ jobs:
             git pull --rebase origin ${{ github.ref_name }}
             git push origin HEAD:${{ github.ref_name }}
           fi
+

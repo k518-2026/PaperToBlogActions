@@ -58,34 +58,49 @@ class GeminiImageGenerator:
 
         logger.info(f"Generating 1-sheet infographic illustration: {refined_prompt[:140]}...")
 
-        # Strategy 1: generate_content with response_modalities=["IMAGE"] (Gemini 3.1 Flash Image)
-        for img_model in [self.model_name, "gemini-3.1-flash-image", "gemini-3-pro-image-preview"]:
+        # Model candidates for Gemini native image generation
+        models_to_try = []
+        for m in [self.model_name, "gemini-3.1-flash-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview", "gemini-2.5-flash-image"]:
+            if m and m not in models_to_try:
+                models_to_try.append(m)
+
+        # Strategy 1: generate_content with Gemini Image models
+        for img_model in models_to_try:
+            # 1a. Try with explicit IMAGE modality and 16:9 aspect ratio config
             try:
-                logger.info(f"Attempting image generation via generate_content ({img_model})...")
+                logger.info(f"Attempting image generation via generate_content ({img_model}) with 16:9 config...")
                 response = self.client.models.generate_content(
                     model=img_model,
-                    contents=refined_prompt,
+                    contents=[refined_prompt],
                     config=types.GenerateContentConfig(
                         response_modalities=["IMAGE"],
                         image_config=types.ImageConfig(aspect_ratio="16:9")
                     )
                 )
-                if hasattr(response, "parts") and response.parts:
-                    for part in response.parts:
-                        if getattr(part, "inline_data", None):
-                            output_path.parent.mkdir(parents=True, exist_ok=True)
-                            gen_img = part.as_image()
-                            gen_img.save(output_path)
-                            logger.info(f"Successfully generated infographic via generate_content ({img_model}): {output_path}")
-                            return output_path
+                if self._extract_and_save_image(response, output_path):
+                    logger.info(f"Successfully generated infographic via generate_content ({img_model}): {output_path}")
+                    return output_path
             except Exception as e:
-                logger.warning(f"generate_content with {img_model} failed: {e}")
+                logger.warning(f"generate_content with {img_model} (config) failed: {e}")
+
+            # 1b. Try without config (canonical simple pattern)
+            try:
+                logger.info(f"Attempting image generation via generate_content ({img_model}) default...")
+                response = self.client.models.generate_content(
+                    model=img_model,
+                    contents=[refined_prompt]
+                )
+                if self._extract_and_save_image(response, output_path):
+                    logger.info(f"Successfully generated infographic via generate_content ({img_model}) [simple]: {output_path}")
+                    return output_path
+            except Exception as e:
+                logger.warning(f"generate_content with {img_model} (simple) failed: {e}")
 
         # Strategy 2: Interactions API with response_modalities=['IMAGE']
         try:
             logger.info("Attempting infographic generation via interactions API...")
             interaction = self.client.interactions.create(
-                model=self.model_name,
+                model=self.model_name or "gemini-3.1-flash-image",
                 input=refined_prompt,
                 response_modalities=["IMAGE"]
             )
@@ -100,7 +115,7 @@ class GeminiImageGenerator:
         except Exception as e:
             logger.warning(f"Interactions image generation failed: {e}")
 
-        # Strategy 3: Imagen 3 / 4 (models.generate_images)
+        # Strategy 3: Imagen models (models.generate_images)
         for imagen_model in ["imagen-3.0-generate-002", "imagen-4.0-generate-001"]:
             try:
                 logger.info(f"Attempting infographic generation via models.generate_images ({imagen_model})...")
@@ -126,6 +141,57 @@ class GeminiImageGenerator:
         # Strategy 4: Fallback Pillow 3-column infographic
         logger.info("AI image generation unavailable or restricted. Creating 3-column educational infographic card sheet...")
         return self._create_fallback_infographic(title, output_path)
+
+    @staticmethod
+    def _extract_and_save_image(response, output_path: Path) -> bool:
+        """Helper to reliably extract and save image from SDK response candidates or parts."""
+        # Check candidates first
+        candidates = getattr(response, "candidates", None) or []
+        for cand in candidates:
+            content = getattr(cand, "content", None)
+            parts = getattr(content, "parts", None) or []
+            for part in parts:
+                if getattr(part, "inline_data", None):
+                    try:
+                        gen_img = part.as_image()
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        gen_img.save(output_path)
+                        return True
+                    except Exception:
+                        pass
+                    data = getattr(part.inline_data, "data", None)
+                    if data:
+                        if isinstance(data, str):
+                            data = base64.b64decode(data)
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        with open(output_path, "wb") as f:
+                            f.write(data)
+                        return True
+
+        # Check response.parts convenience property
+        try:
+            parts = getattr(response, "parts", None) or []
+            for part in parts:
+                if getattr(part, "inline_data", None):
+                    try:
+                        gen_img = part.as_image()
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        gen_img.save(output_path)
+                        return True
+                    except Exception:
+                        pass
+                    data = getattr(part.inline_data, "data", None)
+                    if data:
+                        if isinstance(data, str):
+                            data = base64.b64decode(data)
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        with open(output_path, "wb") as f:
+                            f.write(data)
+                        return True
+        except Exception:
+            pass
+
+        return False
 
     @staticmethod
     def _get_font(size: int):
