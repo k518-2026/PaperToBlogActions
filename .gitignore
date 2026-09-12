@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Secrets & Environment
+.env
+*.pem
+*.key
+
+# Output & Temp Files
+temp/
+*.png
+*.jpg
+*.jpeg
+!data/sample_*.png
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db

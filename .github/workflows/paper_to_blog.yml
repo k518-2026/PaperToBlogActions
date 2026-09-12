@@ -1,0 +1,87 @@
+name: Auto Post Research Papers to WordPress
+
+on:
+  # Daily scheduled run (23:00 UTC = 08:00 AM JST)
+  schedule:
+    - cron: '0 23 * * *'
+
+  # Manual execution from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (Simulate without sending email or updating history)'
+        type: boolean
+        required: false
+        default: false
+      force:
+        description: 'Force run (Ignore posted history and pick newest paper)'
+        type: boolean
+        required: false
+        default: false
+      topic:
+        description: 'Filter topic (e.g. プログラミング教育 / コンピューテーショナルシンキング / 情報教育)'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Paper-to-Blog Pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WP_POST_EMAIL: ${{ secrets.WP_POST_EMAIL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL || 'gemini-3.7-flash' }}
+          GEMINI_IMAGE_MODEL: ${{ vars.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image' }}
+          WP_POST_STATUS: ${{ vars.WP_POST_STATUS || 'publish' }}
+        run: |
+          CMD="python -m src.main"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            CMD="$CMD --dry-run"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            CMD="$CMD --force"
+          fi
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            CMD="$CMD --topic '${{ github.event.inputs.topic }}'"
+          fi
+          echo "Running command: $CMD"
+          eval $CMD
+
+      - name: Commit & Push Updated History
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/posted_papers.json
+          if git diff --staged --quiet; then
+            echo "No state updates to commit."
+          else
+            git commit -m "Update posted papers state [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
