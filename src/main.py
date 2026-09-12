@@ -45,9 +45,20 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
 
     # 2. Summarize with Gemini (Strict 150-300 chars & Wikipedia links)
     logger.info("--- Step 2: Summarizing Paper (Ochiai 7-Point Format with Wikipedia Links) ---")
-    if not Config.GEMINI_API_KEY:
+    summary = None
+    if Config.GEMINI_API_KEY:
+        try:
+            summarizer = PaperSummarizer(api_key=Config.GEMINI_API_KEY, model_name=Config.GEMINI_TEXT_MODEL)
+            summary = summarizer.summarize(paper)
+        except Exception as e:
+            if dry_run:
+                logger.warning(f"Gemini API summarization encountered an error: {e}. Using simulation summary for dry-run.")
+            else:
+                raise
+
+    if summary is None:
         if dry_run:
-            logger.warning("GEMINI_API_KEY is not set. Generating sample 150-300 char summary with Wikipedia links for simulation.")
+            logger.warning("Using simulation 150-300 char summary with Wikipedia links for dry-run mode.")
             summary = PaperSummaryModel(
                 blog_title=f"【必読論文】{paper.get('title')}",
                 summary_lead=f"本研究は、海外の教育現場において{citations}回以上引用されている極めて影響力の高い実践研究です。コンピュテーショナルシンキングの育成とプログラミング指導における新たな知見を包括的に提示しています。",
@@ -66,9 +77,6 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
             )
         else:
             raise ValueError("GEMINI_API_KEY environment variable is required for production.")
-    else:
-        summarizer = PaperSummarizer(api_key=Config.GEMINI_API_KEY, model_name=Config.GEMINI_TEXT_MODEL)
-        summary = summarizer.summarize(paper)
 
     logger.info(f"Generated Blog Title: {summary.blog_title}")
 

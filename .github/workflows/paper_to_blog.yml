@@ -56,25 +56,28 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL || 'gemini-3.7-flash' }}
+          GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL || 'gemini-2.5-flash' }}
           GEMINI_IMAGE_MODEL: ${{ vars.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image' }}
           WP_POST_STATUS: ${{ vars.WP_POST_STATUS || 'publish' }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUT_FORCE: ${{ inputs.force }}
+          INPUT_TOPIC: ${{ inputs.topic }}
         run: |
-          CMD="python -m src.main"
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            CMD="$CMD --dry-run"
+          ARGS=""
+          if [ "$INPUT_DRY_RUN" = "true" ] || [ "$INPUT_DRY_RUN" = "True" ] || [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
           fi
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then
-            CMD="$CMD --force"
+          if [ "$INPUT_FORCE" = "true" ] || [ "$INPUT_FORCE" = "True" ] || [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
           fi
-          if [ -n "${{ github.event.inputs.topic }}" ]; then
-            CMD="$CMD --topic '${{ github.event.inputs.topic }}'"
+          if [ -n "$INPUT_TOPIC" ]; then
+            ARGS="$ARGS --topic '$INPUT_TOPIC'"
           fi
-          echo "Running command: $CMD"
-          eval $CMD
+          echo "Executing: python -m src.main $ARGS"
+          python -m src.main $ARGS
 
       - name: Commit & Push Updated History
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ inputs.dry_run != true && github.event.inputs.dry_run != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

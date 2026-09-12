@@ -116,28 +116,35 @@ URL: {paper.get('url')}
 {paper.get('abstract')}
 """
 
-        logger.info(f"Calling Gemini ({self.model_name}) to summarize paper: {paper.get('title')}")
+        models_to_try = [self.model_name]
+        for fallback in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]:
+            if fallback not in models_to_try:
+                models_to_try.append(fallback)
 
-        try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=[
-                    {"role": "user", "parts": [{"text": prompt_content}]}
-                ],
-                config={
-                    "system_instruction": self.SYSTEM_INSTRUCTION,
-                    "response_mime_type": "application/json",
-                    "response_schema": PaperSummaryModel,
-                    "temperature": 0.3
-                }
-            )
+        last_error = None
+        for model in models_to_try:
+            logger.info(f"Attempting Gemini summarization with model: {model}")
+            try:
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=prompt_content,
+                    config={
+                        "system_instruction": self.SYSTEM_INSTRUCTION,
+                        "response_mime_type": "application/json",
+                        "response_schema": PaperSummaryModel,
+                        "temperature": 0.3
+                    }
+                )
+                result_dict = json.loads(response.text)
+                summary = PaperSummaryModel(**result_dict)
+                logger.info(f"Successfully summarized paper using model: {model}")
+                return self._post_process_links(summary)
+            except Exception as e:
+                logger.warning(f"Summarization with {model} failed: {e}")
+                last_error = e
 
-            result_dict = json.loads(response.text)
-            summary = PaperSummaryModel(**result_dict)
-            return self._post_process_links(summary)
-        except Exception as e:
-            logger.error(f"Error calling Gemini for summarization: {e}")
-            raise
+        logger.error(f"All Gemini models failed for summarization. Last error: {last_error}")
+        raise last_error
 
     @staticmethod
     def _post_process_links(summary: PaperSummaryModel) -> PaperSummaryModel:
