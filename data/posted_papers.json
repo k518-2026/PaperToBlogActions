@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-12T15:55:38.935463",
-  "total_posted": 3,
+  "last_updated": "2026-09-12T16:06:46.409154",
+  "total_posted": 4,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147"
   ],
@@ -31,6 +31,15 @@
       "blog_title": "【注目論文】生成AI（ChatGPT）がプログラミング教育とコンピュテーショナル・シンキングに与える影響を徹底解説",
       "url": "https://doi.org/10.1016/j.caeai.2023.100147",
       "posted_at": "2026-09-12 15:55:38"
+    },
+    {
+      "id": "https://doi.org/10.1016/j.caeai.2023.100147",
+      "title": "The effect of generative artificial intelligence (AI)-based tool use on students' computational thinking skills, programming self-efficacy and motivation",
+      "cited_by_count": 717,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】ChatGPT等の生成AI活用がプログラミング教育に及ぼす効果：思考力・自己効力感・モチベーションの向上を実証",
+      "url": "https://doi.org/10.1016/j.caeai.2023.100147",
+      "posted_at": "2026-09-12 16:06:46"
     }
   ],
   "posted_titles": [
