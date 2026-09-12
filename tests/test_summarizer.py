@@ -51,5 +51,62 @@ def test_summary_model_and_html():
     assert "[category 情報教育,プログラミング教育]" in html
     print("test_summary_model_and_html passed with character length and citations verified!")
 
+def test_wikipedia_validation():
+    from src.summarizer import WikipediaValidator
+
+    # Test 1: validate_titles with existing, redirected, and non-existent articles
+    titles = ["情報教育", "Scratch", "存在しない架空のテスト項目12345"]
+    val_map = WikipediaValidator.validate_titles(titles)
+
+    assert val_map["情報教育"] == "情報教育", f"Expected '情報教育', got {val_map.get('情報教育')}"
+    assert val_map["Scratch"] == "スクラッチ", f"Expected 'スクラッチ', got {val_map.get('Scratch')}"
+    assert val_map["存在しない架空のテスト項目12345"] is None, f"Expected None for missing article, got {val_map.get('存在しない架空のテスト項目12345')}"
+
+    # Test 2: process_text_links strips missing links and preserves valid ones
+    input_text = (
+        '本稿では、<a href="https://ja.wikipedia.org/wiki/情報教育">情報教育</a>の発展と、'
+        '<a href="https://ja.wikipedia.org/wiki/存在しない架空のテスト項目12345">架空の概念</a>の検討、'
+        'および[Scratch](https://ja.wikipedia.org/wiki/Scratch)の活用について解説する。'
+    )
+    processed = WikipediaValidator.process_text_links(input_text)
+
+    # Valid links must be present with canonical target
+    assert 'https://ja.wikipedia.org/wiki/%E6%83%85%E5%A0%B1%E6%95%99%E8%82%B2' in processed
+    assert 'https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%AF%E3%83%A9%E3%83%83%E3%83%81' in processed
+    assert 'target="_blank"' in processed
+
+    # Non-existent link must be stripped into plain text (no <a> tag for it)
+    assert '架空の概念' in processed
+    assert 'href="https://ja.wikipedia.org/wiki/存在しない架空のテスト項目12345"' not in processed
+    assert '<a href=' in processed  # Only valid links remain as <a>
+
+    # Test 3: post_process_links on PaperSummaryModel
+    summary = PaperSummaryModel(
+        blog_title="テストタイトル",
+        summary_lead="テストリード文",
+        point1_what='初等教育の<a href="https://ja.wikipedia.org/wiki/プログラミング教育">プログラミング教育</a>と<a href="https://ja.wikipedia.org/wiki/情報教育">情報教育</a>の比較。',
+        point2_novelty='テスト2',
+        point3_core='テスト3',
+        point4_evaluation='テスト4',
+        point5_discussion='テスト5',
+        point6_next_papers='テスト6',
+        point7_apa_citation='テスト7',
+        infographic_title='テスト',
+        infographic_col1='col1',
+        infographic_col2='col2',
+        infographic_col3='col3',
+        infographic_prompt='prompt'
+    )
+
+    cleaned_summary = PaperSummarizer.post_process_links(summary)
+    # プログラミング教育 does not exist on ja.wikipedia.org, so it should be plain text
+    assert '<a href="https://ja.wikipedia.org/wiki/プログラミング教育"' not in cleaned_summary.point1_what
+    assert 'プログラミング教育' in cleaned_summary.point1_what
+    # 情報教育 exists, so it should be linked
+    assert '<a href="https://ja.wikipedia.org/wiki/%E6%83%85%E5%A0%B1%E6%95%99%E8%82%B2"' in cleaned_summary.point1_what
+
+    print("test_wikipedia_validation passed successfully!")
+
 if __name__ == "__main__":
     test_summary_model_and_html()
+    test_wikipedia_validation()
