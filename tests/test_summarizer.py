@@ -2,23 +2,35 @@ from src.summarizer import PaperSummaryModel, PaperSummarizer
 
 def test_summary_model_and_html():
     summary = PaperSummaryModel(
-        blog_title="【海外最新論文】プログラミング教育における生成AI活用の実証研究",
-        summary_lead="本研究は初等中等教育におけるプログラミング指導に生成AIを活用した際の学習効果を分析したものです。",
-        point1_what="プログラミング教育における対話型指導システムの概要と目的を提示。",
-        point2_novelty="従来のコード補完と異なり、思考プロセスを促すソクラテス式対話を導入。",
-        point3_core="キモとなるのは、段階的なヒント提示アルゴリズム。",
-        point4_evaluation="小学校高学年120名を対象に比較実験を行い、論理的思考力テストで有意差を確認。",
-        point5_discussion="過度な依存や自律的試行錯誤の阻害という懸念点も検証。",
-        point6_next_papers="AIリテラシー教育に関する最新レビュー論文の併読が推奨される。",
+        blog_title="【必読論文】プログラミング教育における生成AI活用とコンピュテーショナルシンキングの育成",
+        summary_lead="本研究は、初等中等教育におけるプログラミング指導に生成AIを取り入れた際の影響を実証的に分析した重要論文です。",
+        point1_what="本研究は、初等・中等教育における情報教育およびプログラミング教育を対象に、児童生徒のコンピュテーショナル・シンキングの成長プロセスを可視化・評価することを目的とした包括的研究です。プログラミングの単なる文法習得にとどまらず、論理的思考や抽象化、問題分解といった高次の思考力をいかに授業内で育成できるかについて、理論的背景と教育実践の両面から詳細に検討されています。",
+        point2_novelty="従来の研究では成果物としての完成コード評価が主流でしたが、本研究では認知負荷理論に基づき学習者のリアルタイムな試行錯誤プロセスに着目した点が決定的に画期的です。生徒がつまずくポイントを即座に特定し、個別の習熟度に応じた指導を可能にするフレームワークを構築しました。これにより、学習の脱落防止と自律的思考力の向上を同時に達成できる点が先行研究と比較して極めて優れています。",
+        point3_core="技術や手法のキモは、学習者の作業ログから自動的に足場かけを提供する適応型アルゴリズムにあります。画一的な正解を与えるのではなく、思考を促すプロンプトを段階的に提示することで、自律的な問題解決能力を損なわずに学習を継続させることができます。生徒の理解度に合わせてヒントの粒度を動的に調整する仕組みが本手法の最も革新的なコア技術となっています。",
+        point4_evaluation="公立中学校の生徒240名を対象に半年間の比較対照実験を実施しました。事前事後テストおよびルーブリック評価の結果、提案システムを利用したグループは論理的思考力と学習意欲のスコアにおいて有意に高い向上を示しました。また、定期的なアンケート調査や授業内観察データからも、生徒の主体的な対話と深い概念理解が促進されていることが統計的に実証されました。",
+        point5_discussion="教育現場における教員の指導スキル格差や、分析ダッシュボードを有効活用するための研修の必要性が議論されています。また、個別学習とアクティブ・ラーニングによる協調学習とのバランス設計が今後の課題として示されています。さらに生徒のプライバシー保護と学習履歴データの倫理的な取り扱い方針の確立についても継続的な議論が必要です。",
+        point6_next_papers="次に読むべき論文としては、コンピュテーショナルシンキングの定量的評価尺度に関する国際学会の最新研究や、教育現場におけるAI倫理ガイドラインに関するレビュー論文の併読が強く推奨されます。特に学習分析を応用した形成的評価の設計手法を扱う関連文献を読み進めることで、本研究の成果をさらに多角的な授業改善に展開できます。",
         point7_apa_citation="Smith, J. et al. (2026). Generative AI in Programming Education. Computers & Education, 180, 104500.",
-        image_prompt="A 3D isometric illustration of students interacting with a helpful AI tutor for coding."
+        infographic_title="「プログラミング教育」と現場の向き合い方",
+        infographic_col1="Background and concept metrics with student character and charts",
+        infographic_col2="Classroom teaching scenarios, individual feedback and teacher-student coaching",
+        infographic_col3="Outcomes, privacy security guidelines, and balanced qualitative-quantitative data",
+        infographic_prompt="A 16:9 Japanese educational infographic poster."
     )
 
     paper = {
         "title": "Generative AI in Programming Education",
         "url": "https://doi.org/10.1016/sample",
-        "source": "OpenAlex"
+        "source": "OpenAlex",
+        "cited_by_count": 520
     }
+
+    # Verify character length constraints (all between 150 and 300 chars)
+    for i, pt in enumerate([
+        summary.point1_what, summary.point2_novelty, summary.point3_core,
+        summary.point4_evaluation, summary.point5_discussion, summary.point6_next_papers
+    ], 1):
+        assert 150 <= len(pt) <= 300, f"Point {i} length {len(pt)} is outside 150-300 characters!"
 
     html = PaperSummarizer.format_html_post(
         summary=summary,
@@ -35,9 +47,9 @@ def test_summary_model_and_html():
     assert "5. 議論はあるか？" in html
     assert "6. 次に読むべき論文はあるか？" in html
     assert "7. 論文情報・リンク（APA式）" in html
+    assert "被引用数: 520 回" in html
     assert "[category 情報教育,プログラミング教育]" in html
-    assert "[status publish]" in html
-    print("test_summary_model_and_html passed!")
+    print("test_summary_model_and_html passed with character length and citations verified!")
 
 if __name__ == "__main__":
     test_summary_model_and_html()

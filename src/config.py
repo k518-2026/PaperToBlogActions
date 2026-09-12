@@ -34,22 +34,22 @@ class Config:
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASS: str = os.getenv("SMTP_PASS", "")
 
-    # Paper Search Keywords (English academic query sets)
+    # Paper Search Keywords (English academic query sets focusing on education)
     SEARCH_TOPICS: List[dict] = [
         {
             "name": "コンピューテーショナルシンキング",
-            "arxiv_query": 'all:"computational thinking"',
-            "openalex_query": '"computational thinking"'
+            "arxiv_query": 'all:"computational thinking" AND (all:education OR all:programming OR all:curriculum)',
+            "openalex_query": '"computational thinking" AND (education OR curriculum OR programming OR learning)'
         },
         {
             "name": "プログラミング教育",
             "arxiv_query": 'all:"programming education" OR all:"teaching programming" OR all:"introductory programming"',
-            "openalex_query": '"programming education" OR "introductory programming"'
+            "openalex_query": '"programming education" OR "teaching programming" OR "introductory programming"'
         },
         {
             "name": "情報教育",
             "arxiv_query": 'all:"computer science education" OR all:"computing education" OR all:"informatics education"',
-            "openalex_query": '"computer science education" OR "computing education"'
+            "openalex_query": '"computer science education" OR "computing education" OR "informatics education"'
         }
     ]
 
