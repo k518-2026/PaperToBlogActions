@@ -91,5 +91,6 @@ jobs:
             echo "No state updates to commit."
           else
             git commit -m "Update posted papers state [skip ci]"
+            git pull --rebase origin ${{ github.ref_name }}
             git push origin HEAD:${{ github.ref_name }}
           fi
