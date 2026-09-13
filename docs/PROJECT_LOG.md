@@ -70,6 +70,7 @@
   - Priority 1: Gemini Image API（課金有効キー時）
   - Priority 2: Pollinations FLUX（無料AI画像）
   - Priority 3: Pillow 3カラムグラフィックカード
+- **画像配置の最適化**: WordPress「メールで投稿」が末尾に添付画像を自動挿入する仕様に合わせ、記事本文上部の重複画像を除去。記事末尾の出典カード直下に1枚だけ綺麗に表示されるようレイアウトを最適化。
 
 ---
 
