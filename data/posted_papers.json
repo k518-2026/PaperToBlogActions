@@ -1,10 +1,11 @@
 {
-  "last_updated": "2026-09-13T13:16:37.191495",
-  "total_posted": 7,
+  "last_updated": "2026-09-13T13:25:08.196536",
+  "total_posted": 8,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
-    "https://doi.org/10.1186/s12909-022-03154-8"
+    "https://doi.org/10.1186/s12909-022-03154-8",
+    "https://doi.org/10.1145/3444944"
   ],
   "posts": [
     {
@@ -69,11 +70,21 @@
       "blog_title": "【重要論文】医学教育における問題解決学習（PBL）の有効性と教育現場への示唆：大規模スコーピングレビューの分析",
       "url": "https://doi.org/10.1186/s12909-022-03154-8",
       "posted_at": "2026-09-13 13:16:37"
+    },
+    {
+      "id": "https://doi.org/10.1145/3444944",
+      "title": "A Survey on Causal Inference",
+      "cited_by_count": 465,
+      "source": "OpenAlex",
+      "blog_title": "【教育データ分析】因果推論と機械学習の融合が拓くエビデンスに基づく教育の実践",
+      "url": "https://doi.org/10.1145/3444944",
+      "posted_at": "2026-09-13 13:25:08"
     }
   ],
   "posted_titles": [
     "The effect of generative artificial intelligence (AI)-based tool use on students' computational thinking skills, programming self-efficacy and motivation",
     "Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models",
-    "Effectiveness of problem-based learning methodology in undergraduate medical education: a scoping review"
+    "Effectiveness of problem-based learning methodology in undergraduate medical education: a scoping review",
+    "A Survey on Causal Inference"
   ]
 }
