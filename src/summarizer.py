@@ -383,10 +383,6 @@ URL: {paper.get('url')}
     <p style="margin: 0; font-size: 1.05em; line-height: 1.8; color: #1e3a8a;">{summary.summary_lead}</p>
 </div>""")
 
-        # If Unsplash photo_info is provided, embed hotlinked photo directly below lead
-        if photo_info and hasattr(photo_info, "hotlink_img_html"):
-            html_parts.append(photo_info.hotlink_img_html)
-
         sections = [
             ("1. どんなもの？", summary.point1_what, "#2563eb", "💡"),
             ("2. 先行研究と比べてどこがすごいの？", summary.point2_novelty, "#0d9488", "✨"),

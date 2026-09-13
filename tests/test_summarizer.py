@@ -121,11 +121,9 @@ def test_unsplash_photo_info_and_html():
         app_name="PaperToBlogActions"
     )
 
-    # Check UTM parameters and hotlink HTML
+    # Check UTM parameters and attribution HTML
     assert "utm_source=PaperToBlogActions" in photo_info.attribution_html
     assert "utm_medium=referral" in photo_info.attribution_html
-    assert "https://images.unsplash.com/photo-123456789-test" in photo_info.hotlink_img_html
-    assert "Photo by" in photo_info.hotlink_img_html
 
     summary = PaperSummaryModel(
         blog_title="Unsplashテスト記事",
@@ -158,7 +156,9 @@ def test_unsplash_photo_info_and_html():
         photo_info=photo_info
     )
 
-    assert "https://images.unsplash.com/photo-123456789-test" in html
+    # Top image is NOT inserted
+    assert '<img src="https://images.unsplash.com/photo-123456789-test"' not in html
+    # Footer attribution is present
     assert "utm_source=PaperToBlogActions" in html
     assert "Jane Doe" in html
     assert "Unsplash" in html
