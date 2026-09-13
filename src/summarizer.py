@@ -385,22 +385,35 @@ URL: {paper.get('url')}
 
         for title, content, border_color, icon in sections:
             formatted_content = content.replace("\n", "<br>")
+            extra_html = ""
+            if title.startswith("7."):
+                source_name = paper.get("source", "学術データベース")
+                extra_html = f"""
+    <div style="margin-top: 14px; padding: 10px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; border-radius: 6px; font-size: 0.95em; color: #166534;">
+        📊 <strong>本記事作成時点の被引用数:</strong> <span style="font-size: 1.15em; font-weight: bold; color: #15803d;">{citations:,} 回</span>
+        <span style="font-size: 0.85em; color: #4b5563; margin-left: 8px;">（※{source_name} 調査時点 / 引用数は公開後に随時更新されます）</span>
+    </div>"""
+
             html_parts.append(f"""
 <h2 style="border-left: 5px solid {border_color}; padding-left: 12px; color: #1e293b; margin-top: 32px; font-size: 1.25em;">
     {icon} {title}
 </h2>
 <div style="font-size: 1.0em; line-height: 1.85; color: #334155; margin-bottom: 24px; padding: 4px 8px;">
-    {formatted_content}
+    {formatted_content}{extra_html}
 </div>
 """)
 
         # Original source link footer
         paper_url = paper.get("url", "")
         if paper_url:
+            source_name = paper.get("source", "学術データベース")
             html_parts.append(f"""
-<div style="margin-top: 36px; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-    <p style="margin: 0; font-size: 0.95em; color: #475569;">
+<div style="margin-top: 36px; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <p style="margin: 0 0 8px 0; font-size: 0.95em; color: #475569;">
         🔗 <strong>原文・DOIリンク:</strong> <a href="{paper_url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; word-break: break-all;">{paper_url}</a>
+    </p>
+    <p style="margin: 0; font-size: 0.9em; color: #64748b;">
+        📈 <strong>記事作成時の被引用数:</strong> {citations:,} 回（{source_name} 調べ）
     </p>
 </div>
 """)

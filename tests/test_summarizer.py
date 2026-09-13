@@ -48,6 +48,7 @@ def test_summary_model_and_html():
     assert "6. 次に読むべき論文はあるか？" in html
     assert "7. 論文情報・リンク（APA式）" in html
     assert "被引用数: 520 回" in html
+    assert "本記事作成時点の被引用数:" in html
     assert "[category 情報教育,プログラミング教育]" in html
     print("test_summary_model_and_html passed with character length and citations verified!")
 
