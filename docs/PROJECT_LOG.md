@@ -56,12 +56,28 @@
 - 「7. 論文情報・リンク（APA式）」の直後および末尾のDOIカード内に、記事作成時点の被引用数（例: `📊 本記事作成時点の被引用数: 471 回（※OpenAlex 調査時点 / 引用数は公開後に随時更新されます）`）を視覚的バッジとして自動掲載。
 - 引用数は日々変動するため、記事執筆・公開時点での学術的影響力を読者に明確に伝える設計に改善。
 
+### (7) Unsplash API連携（高解像度写真アイキャッチ & Production審査規準遵守）
+- **背景**: アイキャッチ画像として、AIイラストに加えてUnsplashの高品質・高解像度写真を利用できるように機能拡張。
+- **Unsplash利用規約・本番審査（Apply for Production）完全準拠設計**:
+  1. **Hotlink photos**: HTML本文内にUnsplash CDN（`images.unsplash.com`）の直リンク画像を埋め込み（自前サーバー/GitHubへの画像再ホスティングによる配信を防止）。
+  2. **Trigger downloads**: 画像利用時にUnsplash公式のダウンロード追跡エンドポイント（`photo.links.download_location?client_id=...`）へGETリクエストを自動発火。
+  3. **No Unsplash Logo/Distinct Name**: アプリケーション名称は `PaperToBlogActions` とし、Unsplashロゴを流用しない独自UI。
+  4. **Attribution & UTM Parameters**: 写真直下のキャプションおよび記事末尾カードに、撮影者氏名とUnsplashへのリンクを規定のUTMパラメータ付きで記載：
+     `Photo by <a href="{photographer_url}?utm_source=PaperToBlogActions&utm_medium=referral">Name</a> on <a href="https://unsplash.com/?utm_source=PaperToBlogActions&utm_medium=referral">Unsplash</a>`
+- **ユーザー指定**: 文字入れ等の加工を行わず、純粋な高解像度写真をそのままアイキャッチとして使用。
+- **階層型フォールバック**:
+  - Priority 0: Unsplash API（`UNSPLASH_ACCESS_KEY` 設定時）
+  - Priority 1: Gemini Image API（課金有効キー時）
+  - Priority 2: Pollinations FLUX（無料AI画像）
+  - Priority 3: Pillow 3カラムグラフィックカード
+
 ---
 
 ## 3. 運用・保守手順
 
 ### APIキー・パスワードの更新
 GitHubリポジトリの **[Settings > Secrets and variables > Actions](https://github.com/k518-2026/PaperToBlogActions/settings/secrets/actions)** からいつでも変更可能です：
+- `UNSPLASH_ACCESS_KEY`: Unsplash API Access Key（写真取得用）
 - `GEMINI_API_KEY`: Google Gemini APIキー
 - `WP_POST_EMAIL`: WordPress投稿受信用メールアドレス
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`: 送信用SMTP設定
@@ -71,3 +87,4 @@ GitHubリポジトリの **[Settings > Secrets and variables > Actions](https://
 2. **「Auto Post Research Papers to WordPress」** ワークフローを選択。
 3. **「Run workflow」** プルダウンを開き、`dry_run: true` を選んで実行。
    - メール送信を行わずに、要約本文やインフォグラフィック生成、Wikipediaリンク検証の結果を確認できます。
+

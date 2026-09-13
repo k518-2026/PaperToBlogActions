@@ -73,7 +73,8 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
                 infographic_col1="Background and concept: Computational thinking visualization, student in school uniform using digital tablet, radar chart, achievement rate badge",
                 infographic_col2="Classroom practice: Teacher giving individual guidance to student, pair programming, interactive lesson improvement",
                 infographic_col3="Outcomes and guidelines: Data balance scale, qualitative vs quantitative insights, student privacy and warm educational support",
-                infographic_prompt="A 16:9 Japanese educational infographic illustration summarizing computational thinking and programming education with 3 structured columns and a top headline ribbon."
+                infographic_prompt="A 16:9 Japanese educational infographic illustration summarizing computational thinking and programming education with 3 structured columns and a top headline ribbon.",
+                unsplash_keywords="computer science programming classroom"
             )
         else:
             raise ValueError("GEMINI_API_KEY environment variable is required for production.")
@@ -82,25 +83,31 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
     summary = PaperSummarizer.post_process_links(summary)
     logger.info(f"Generated Blog Title: {summary.blog_title}")
 
-    # 3. Generate 1-Sheet Educational Infographic Illustration
-    logger.info("--- Step 3: Generating 1-Sheet Educational Infographic Illustration ---")
+    # 3. Generate 1-Sheet Educational Infographic Illustration or Fetch Unsplash Photography
+    logger.info("--- Step 3: Generating Eyecatch / Educational Infographic ---")
     temp_dir = Config.BASE_DIR / "temp"
     temp_dir.mkdir(exist_ok=True)
     image_path = temp_dir / "eyecatch.png"
 
-    image_generator = GeminiImageGenerator(api_key=Config.GEMINI_API_KEY, model_name=Config.GEMINI_IMAGE_MODEL)
+    image_generator = GeminiImageGenerator(
+        api_key=Config.GEMINI_API_KEY,
+        model_name=Config.GEMINI_IMAGE_MODEL,
+        unsplash_access_key=Config.UNSPLASH_ACCESS_KEY
+    )
     generated_img_path = image_generator.generate_infographic(
         summary_data=summary.model_dump(),
         output_path=image_path
     )
+    photo_info = image_generator.last_photo_info
 
-    # Format HTML post
+    # Format HTML post (embedding hotlinked Unsplash photo and attribution if available)
     html_content = PaperSummarizer.format_html_post(
         summary=summary,
         paper=paper,
         categories=Config.WP_CATEGORIES,
         tags=Config.WP_TAGS,
-        status=Config.WP_POST_STATUS
+        status=Config.WP_POST_STATUS,
+        photo_info=photo_info
     )
 
     # 4. Post to WordPress by Email

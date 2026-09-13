@@ -51,6 +51,10 @@ class PaperSummaryModel(BaseModel):
     infographic_prompt: str = Field(
         description="論文内容を1枚の日本語教育インフォグラフィックイラスト（グラフィックレコーディング風）として生成するための包括的な英語プロンプト"
     )
+    unsplash_keywords: str = Field(
+        default="computer science programming classroom",
+        description="Unsplash画像検索用の一致率の高い英単語2〜3語（例: 'programming classroom', 'robotics education', 'students computer coding' など）"
+    )
 
 
 class PaperSummarizer:
@@ -225,6 +229,9 @@ class PaperSummarizer:
    - 中央カラム ②: 授業現場での活用シーン（教員と生徒の個別指導対話、協調学習の様子）
    - 右カラム ③: 実践の成果と留意点（セキュリティ・プライバシー、定性と定量のバランス、支援の留意点）
    - 全体スタイル: 日本の教育教材・学習マンガ・グラレコ風の親しみやすい図解イラスト、清潔感のある配色、丸角カードパネル、アスペクト比 16:9。
+
+4. 【Unsplash写真検索用キーワード（unsplash_keywords）】:
+   論文のテーマに最も関連する教育・IT・教室の美しい写真をUnsplashで検索するための英単語を2〜3語出力してください（例: "programming classroom", "robotics students", "artificial intelligence learning", "students computer coding"）。
 """
 
     def __init__(self, api_key: str, model_name: str = "gemini-3.6-flash"):
@@ -356,10 +363,13 @@ URL: {paper.get('url')}
         paper: Dict[str, Any],
         categories: str = "",
         tags: str = "",
-        status: str = "publish"
+        status: str = "publish",
+        photo_attribution: Optional[str] = None,
+        photo_info: Optional[Any] = None
     ) -> str:
         """
         Formats the summary into a clean, modern HTML post with WordPress shortcodes.
+        Adheres to Unsplash Guidelines by embedding hotlinked photos and attribution if photo_info is provided.
         """
         html_parts = []
         citations = paper.get("cited_by_count", 0)
@@ -372,6 +382,10 @@ URL: {paper.get('url')}
     </div>
     <p style="margin: 0; font-size: 1.05em; line-height: 1.8; color: #1e3a8a;">{summary.summary_lead}</p>
 </div>""")
+
+        # If Unsplash photo_info is provided, embed hotlinked photo directly below lead
+        if photo_info and hasattr(photo_info, "hotlink_img_html"):
+            html_parts.append(photo_info.hotlink_img_html)
 
         sections = [
             ("1. どんなもの？", summary.point1_what, "#2563eb", "💡"),
@@ -407,6 +421,16 @@ URL: {paper.get('url')}
         paper_url = paper.get("url", "")
         if paper_url:
             source_name = paper.get("source", "学術データベース")
+            effective_attribution = photo_attribution
+            if not effective_attribution and photo_info and hasattr(photo_info, "attribution_html"):
+                effective_attribution = photo_info.attribution_html
+
+            attribution_html = ""
+            if effective_attribution:
+                attribution_html = f"""
+    <p style="margin: 8px 0 0 0; font-size: 0.88em; color: #64748b;">
+        📷 <strong>アイキャッチ写真:</strong> {effective_attribution}
+    </p>"""
             html_parts.append(f"""
 <div style="margin-top: 36px; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
     <p style="margin: 0 0 8px 0; font-size: 0.95em; color: #475569;">
@@ -414,7 +438,7 @@ URL: {paper.get('url')}
     </p>
     <p style="margin: 0; font-size: 0.9em; color: #64748b;">
         📈 <strong>記事作成時の被引用数:</strong> {citations:,} 回（{source_name} 調べ）
-    </p>
+    </p>{attribution_html}
 </div>
 """)
 

@@ -19,6 +19,9 @@ class Config:
     GEMINI_TEXT_MODEL: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.6-flash")
     GEMINI_IMAGE_MODEL: str = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
 
+    # Unsplash API settings (for photography eyecatch images)
+    UNSPLASH_ACCESS_KEY: str = os.getenv("UNSPLASH_ACCESS_KEY", "")
+
     # Contact email for OpenAlex / Academic APIs
     CONTACT_EMAIL: str = os.getenv("CONTACT_EMAIL", "bot@example.com")
 

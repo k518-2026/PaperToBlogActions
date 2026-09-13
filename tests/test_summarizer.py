@@ -108,6 +108,64 @@ def test_wikipedia_validation():
 
     print("test_wikipedia_validation passed successfully!")
 
+def test_unsplash_photo_info_and_html():
+    from src.image_generator import UnsplashPhotoInfo
+
+    photo_info = UnsplashPhotoInfo(
+        photo_id="test123abc",
+        image_url="https://images.unsplash.com/photo-123456789-test",
+        photographer_name="Jane Doe",
+        photographer_url="https://unsplash.com/@janedoe",
+        download_location="https://api.unsplash.com/photos/test123abc/download",
+        alt_description="Classroom computers and code",
+        app_name="PaperToBlogActions"
+    )
+
+    # Check UTM parameters and hotlink HTML
+    assert "utm_source=PaperToBlogActions" in photo_info.attribution_html
+    assert "utm_medium=referral" in photo_info.attribution_html
+    assert "https://images.unsplash.com/photo-123456789-test" in photo_info.hotlink_img_html
+    assert "Photo by" in photo_info.hotlink_img_html
+
+    summary = PaperSummaryModel(
+        blog_title="Unsplashテスト記事",
+        summary_lead="Unsplash連携のテストリード文です。",
+        point1_what="1" * 160,
+        point2_novelty="2" * 160,
+        point3_core="3" * 160,
+        point4_evaluation="4" * 160,
+        point5_discussion="5" * 160,
+        point6_next_papers="6" * 160,
+        point7_apa_citation="Test Citation (2026)",
+        infographic_title="Title",
+        infographic_col1="col1",
+        infographic_col2="col2",
+        infographic_col3="col3",
+        infographic_prompt="prompt",
+        unsplash_keywords="coding classroom"
+    )
+
+    paper = {
+        "title": "Unsplash Integration Paper",
+        "url": "https://doi.org/10.1000/182",
+        "source": "OpenAlex",
+        "cited_by_count": 88
+    }
+
+    html = PaperSummarizer.format_html_post(
+        summary=summary,
+        paper=paper,
+        photo_info=photo_info
+    )
+
+    assert "https://images.unsplash.com/photo-123456789-test" in html
+    assert "utm_source=PaperToBlogActions" in html
+    assert "Jane Doe" in html
+    assert "Unsplash" in html
+    assert "📷 <strong>アイキャッチ写真:</strong>" in html
+    print("test_unsplash_photo_info_and_html passed successfully!")
+
 if __name__ == "__main__":
     test_summary_model_and_html()
     test_wikipedia_validation()
+    test_unsplash_photo_info_and_html()

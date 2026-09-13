@@ -8,17 +8,68 @@ from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
+class UnsplashPhotoInfo:
+    """
+    Holds Unsplash photo metadata strictly adhering to Unsplash API Guidelines:
+    - Hotlinking directly to images.unsplash.com
+    - Triggering the official download endpoint
+    - Photographer and Unsplash attribution with utm_source and utm_medium=referral
+    """
+    def __init__(
+        self,
+        photo_id: str,
+        image_url: str,
+        photographer_name: str,
+        photographer_url: str,
+        download_location: str,
+        alt_description: str = "",
+        app_name: str = "PaperToBlogActions"
+    ):
+        self.photo_id = photo_id
+        self.image_url = image_url
+        self.photographer_name = photographer_name
+        self.photographer_url = photographer_url
+        self.download_location = download_location
+        self.alt_description = alt_description
+        self.app_name = app_name
+
+    @property
+    def attribution_html(self) -> str:
+        return (
+            f'Photo by <a href="{self.photographer_url}?utm_source={self.app_name}&utm_medium=referral" '
+            f'target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">{self.photographer_name}</a> '
+            f'on <a href="https://unsplash.com/?utm_source={self.app_name}&utm_medium=referral" '
+            f'target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">Unsplash</a>'
+        )
+
+    @property
+    def hotlink_img_html(self) -> str:
+        alt = self.alt_description or "Educational research topic image"
+        return (
+            f'<div style="text-align: center; margin: 20px 0 30px 0;">\n'
+            f'    <img src="{self.image_url}" alt="{alt}" style="width: 100%; max-height: 520px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);" />\n'
+            f'    <p style="font-size: 0.85em; color: #64748b; margin-top: 8px;">{self.attribution_html}</p>\n'
+            f'</div>'
+        )
+
+
 class GeminiImageGenerator:
     """
     Generates structured 1-sheet educational infographic illustrations
-    (modeled after Japanese graphic recording / educational manga summary sheets)
-    using Gemini Image Generation (gemini-3.1-flash-image / imagen-3.0-generate-002).
+    or fetches high-resolution Unsplash photography in compliance with Unsplash API Guidelines.
     Includes an aesthetic 3-column infographic fallback using Pillow.
     """
 
-    def __init__(self, api_key: str, model_name: str = "gemini-3.1-flash-image"):
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str = "gemini-3.1-flash-image",
+        unsplash_access_key: str = ""
+    ):
         self.api_key = api_key
         self.model_name = model_name
+        self.unsplash_access_key = (unsplash_access_key or "").strip()
+        self.last_photo_info: Optional[UnsplashPhotoInfo] = None
         self._client = None
 
     @property
@@ -28,15 +79,144 @@ class GeminiImageGenerator:
             self._client = genai.Client(api_key=self.api_key)
         return self._client
 
+    def _fetch_from_unsplash(
+        self,
+        summary_data: Dict[str, Any],
+        output_path: Path,
+        debug_logs: list
+    ) -> Optional[UnsplashPhotoInfo]:
+        """
+        Fetches a relevant landscape photo from Unsplash API adhering strictly to API Guidelines:
+        1. Query search based on unsplash_keywords or fallback terms.
+        2. Hotlinking to original Unsplash CDN image URL.
+        3. Triggering download tracking endpoint.
+        4. Photographer and Unsplash attribution with utm params.
+        """
+        if not self.unsplash_access_key:
+            return None
+
+        import urllib.request
+        import urllib.parse
+        import json
+
+        # Determine queries to search
+        custom_kw = summary_data.get("unsplash_keywords", "").strip()
+        queries = []
+        if custom_kw:
+            queries.append(custom_kw)
+
+        # Fallback educational technology / programming topics
+        for fb in [
+            "computer science education classroom",
+            "programming students learning",
+            "classroom technology tablet coding",
+            "artificial intelligence education learning"
+        ]:
+            if fb not in queries:
+                queries.append(fb)
+
+        for q in queries:
+            try:
+                logger.info(f"Searching Unsplash for query: '{q}'...")
+                encoded = urllib.parse.quote(q)
+                api_url = f"https://api.unsplash.com/search/photos?query={encoded}&orientation=landscape&content_filter=high&per_page=10"
+                req = urllib.request.Request(
+                    api_url,
+                    headers={
+                        "Authorization": f"Client-ID {self.unsplash_access_key}",
+                        "Accept-Version": "v1",
+                        "User-Agent": "PaperToBlogActions/1.0"
+                    }
+                )
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status != 200:
+                        debug_logs.append(f"Unsplash API returned HTTP {resp.status} for query '{q}'")
+                        continue
+                    data = json.loads(resp.read().decode("utf-8"))
+
+                results = data.get("results", [])
+                if not results:
+                    debug_logs.append(f"Unsplash returned 0 results for query '{q}'")
+                    continue
+
+                # Select the best matching photo (first result)
+                photo = results[0]
+                img_url = photo.get("urls", {}).get("regular") or photo.get("urls", {}).get("full")
+                if not img_url:
+                    continue
+
+                download_location = photo.get("links", {}).get("download_location")
+
+                # Requirement 2: Trigger download tracking endpoint
+                if download_location:
+                    try:
+                        sep = "&" if "?" in download_location else "?"
+                        track_url = f"{download_location}{sep}client_id={self.unsplash_access_key}"
+                        track_req = urllib.request.Request(track_url, headers={"User-Agent": "PaperToBlogActions/1.0"})
+                        urllib.request.urlopen(track_req, timeout=5)
+                        debug_logs.append(f"Unsplash download event triggered: {photo.get('id')}")
+                    except Exception as te:
+                        logger.warning(f"Unsplash download tracking notice: {te}")
+                        debug_logs.append(f"Unsplash download tracking warning: {te}")
+
+                # Download high-resolution image bytes for WordPress email attachment
+                img_req = urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(img_req, timeout=15) as img_resp:
+                    img_bytes = img_resp.read()
+
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_path, "wb") as f:
+                    f.write(img_bytes)
+
+                user_info = photo.get("user", {})
+                photographer_name = user_info.get("name") or user_info.get("username", "Photographer")
+                photographer_url = user_info.get("links", {}).get("html", "https://unsplash.com")
+                alt_desc = photo.get("alt_description") or photo.get("description") or summary_data.get("blog_title", "Research paper topic image")
+
+                photo_info = UnsplashPhotoInfo(
+                    photo_id=photo.get("id", ""),
+                    image_url=img_url,
+                    photographer_name=photographer_name,
+                    photographer_url=photographer_url,
+                    download_location=download_location or "",
+                    alt_description=alt_desc,
+                    app_name="PaperToBlogActions"
+                )
+                logger.info(f"Successfully fetched and hotlinked Unsplash photo by {photographer_name} ({len(img_bytes)} bytes)")
+                debug_logs.append(f"Unsplash: Success (Photo by {photographer_name}, query: '{q}')")
+                return photo_info
+
+            except Exception as e:
+                err_msg = f"Unsplash query '{q}' failed: {type(e).__name__} - {e}"
+                logger.warning(err_msg)
+                debug_logs.append(err_msg)
+
+        return None
+
     def generate_infographic(
         self,
         summary_data: Dict[str, Any],
         output_path: Path
     ) -> Optional[Path]:
         """
-        Generate a comprehensive 1-sheet Japanese educational infographic poster.
+        Generate a comprehensive 1-sheet Japanese educational infographic poster,
+        or fetch a relevant Unsplash photograph if UNSPLASH_ACCESS_KEY is provided.
         """
         from google.genai import types
+
+        self.last_photo_info = None
+        debug_logs = []
+
+        # Strategy 0: High-Resolution Unsplash Photography (if UNSPLASH_ACCESS_KEY is set)
+        if self.unsplash_access_key:
+            logger.info("Unsplash Access Key detected. Attempting to fetch relevant high-resolution photo...")
+            unsplash_res = self._fetch_from_unsplash(summary_data, output_path, debug_logs)
+            if unsplash_res:
+                self.last_photo_info = unsplash_res
+                self._save_debug_log(debug_logs, output_path)
+                return output_path
+            else:
+                logger.warning("Unsplash photo retrieval failed or returned 0 results. Falling back to AI image generation...")
 
         title = summary_data.get("infographic_title") or summary_data.get("blog_title", "教育研究まとめ")
         col1 = summary_data.get("infographic_col1", "Background, computational thinking metrics, student with tablet, radar charts")
@@ -45,7 +225,6 @@ class GeminiImageGenerator:
         base_prompt = summary_data.get("infographic_prompt", "")
 
         # Formulate explicit visual prompt starting with clear generative command
-        # (avoiding trigger keywords that activate safety filters for minors/anime)
         refined_prompt = (
             f"Generate an image: A clean, high-resolution educational infographic illustration and graphic recording poster summarizing academic research: '{title}'. "
             f"Layout structure: 16:9 widescreen composition with 3 clearly defined vertical card panels and a prominent top title banner ribbon. "
@@ -58,8 +237,6 @@ class GeminiImageGenerator:
         )
 
         logger.info(f"Generating 1-sheet infographic illustration: {refined_prompt[:140]}...")
-
-        debug_logs = []
 
         # Model candidates for Gemini native image generation
         models_to_try = []
