@@ -1,11 +1,12 @@
 {
-  "last_updated": "2026-09-13T13:25:08.196536",
-  "total_posted": 8,
+  "last_updated": "2026-09-13T13:30:26.111776",
+  "total_posted": 9,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
     "https://doi.org/10.1186/s12909-022-03154-8",
-    "https://doi.org/10.1145/3444944"
+    "https://doi.org/10.1145/3444944",
+    "http://arxiv.org/abs/1801.09258v1"
   ],
   "posts": [
     {
@@ -79,12 +80,22 @@
       "blog_title": "【教育データ分析】因果推論と機械学習の融合が拓くエビデンスに基づく教育の実践",
       "url": "https://doi.org/10.1145/3444944",
       "posted_at": "2026-09-13 13:25:08"
+    },
+    {
+      "id": "http://arxiv.org/abs/1801.09258v1",
+      "title": "Toward a Phenomenology of Computational Thinking in STEM Education",
+      "cited_by_count": 0,
+      "source": "arXiv",
+      "blog_title": "【重要論文】記号操作から「生きられた経験」へ！STEM教育における現象学的コンピュテーショナルシンキング",
+      "url": "https://arxiv.org/abs/1801.09258v1",
+      "posted_at": "2026-09-13 13:30:26"
     }
   ],
   "posted_titles": [
     "The effect of generative artificial intelligence (AI)-based tool use on students' computational thinking skills, programming self-efficacy and motivation",
     "Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models",
     "Effectiveness of problem-based learning methodology in undergraduate medical education: a scoping review",
-    "A Survey on Causal Inference"
+    "A Survey on Causal Inference",
+    "Toward a Phenomenology of Computational Thinking in STEM Education"
   ]
 }
