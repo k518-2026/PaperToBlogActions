@@ -1,8 +1,9 @@
 {
-  "last_updated": "2026-09-12T16:10:44.989942",
-  "total_posted": 5,
+  "last_updated": "2026-09-13T10:14:28.093497",
+  "total_posted": 6,
   "posted_ids": [
-    "https://doi.org/10.1016/j.caeai.2023.100147"
+    "https://doi.org/10.1016/j.caeai.2023.100147",
+    "https://doi.org/10.1145/3501385.3543957"
   ],
   "posts": [
     {
@@ -49,9 +50,19 @@
       "blog_title": "【注目論文】生成AIを活用したプログラミング教育がコンピュテーショナルシンキングと学習意欲に与える影響",
       "url": "https://doi.org/10.1016/j.caeai.2023.100147",
       "posted_at": "2026-09-12 16:10:44"
+    },
+    {
+      "id": "https://doi.org/10.1145/3501385.3543957",
+      "title": "Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models",
+      "cited_by_count": 473,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】LLMによるプログラミング演習・解説の自動生成：教育現場を変革するAIの可能性",
+      "url": "https://doi.org/10.1145/3501385.3543957",
+      "posted_at": "2026-09-13 10:14:28"
     }
   ],
   "posted_titles": [
-    "The effect of generative artificial intelligence (AI)-based tool use on students' computational thinking skills, programming self-efficacy and motivation"
+    "The effect of generative artificial intelligence (AI)-based tool use on students' computational thinking skills, programming self-efficacy and motivation",
+    "Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models"
   ]
 }
