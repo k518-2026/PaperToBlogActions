@@ -1,12 +1,13 @@
 {
-  "last_updated": "2026-09-13T13:41:52.996790",
-  "total_posted": 10,
+  "last_updated": "2026-09-14T10:05:53.897382",
+  "total_posted": 11,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
     "https://doi.org/10.1186/s12909-022-03154-8",
     "https://doi.org/10.1145/3444944",
-    "http://arxiv.org/abs/1801.09258v1"
+    "http://arxiv.org/abs/1801.09258v1",
+    "https://doi.org/10.1145/3511861.3511863"
   ],
   "posts": [
     {
@@ -98,6 +99,15 @@
       "blog_title": "【注目論文】生成AI（ChatGPT）がプログラミング教育とコンピュテーショナルシンキングに与える影響を徹底解説",
       "url": "https://doi.org/10.1016/j.caeai.2023.100147",
       "posted_at": "2026-09-13 13:41:52"
+    },
+    {
+      "id": "https://doi.org/10.1145/3511861.3511863",
+      "title": "The Robots Are Coming: Exploring the Implications of OpenAI Codex on Introductory Programming",
+      "cited_by_count": 442,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】OpenAI Codexが初等プログラミング教育に与える衝撃と教育の未来",
+      "url": "https://doi.org/10.1145/3511861.3511863",
+      "posted_at": "2026-09-14 10:05:53"
     }
   ],
   "posted_titles": [
@@ -105,6 +115,7 @@
     "Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models",
     "Effectiveness of problem-based learning methodology in undergraduate medical education: a scoping review",
     "A Survey on Causal Inference",
-    "Toward a Phenomenology of Computational Thinking in STEM Education"
+    "Toward a Phenomenology of Computational Thinking in STEM Education",
+    "The Robots Are Coming: Exploring the Implications of OpenAI Codex on Introductory Programming"
   ]
 }
