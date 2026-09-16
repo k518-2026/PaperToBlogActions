@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-15T10:14:28.709026",
-  "total_posted": 12,
+  "last_updated": "2026-09-16T10:05:53.594170",
+  "total_posted": 13,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -8,7 +8,8 @@
     "https://doi.org/10.1145/3444944",
     "http://arxiv.org/abs/1801.09258v1",
     "https://doi.org/10.1145/3511861.3511863",
-    "https://doi.org/10.2196/19285"
+    "https://doi.org/10.2196/19285",
+    "https://doi.org/10.1145/3545945.3569759"
   ],
   "posts": [
     {
@@ -118,6 +119,15 @@
       "blog_title": "【医療系情報教育の最前線】医療・ヘルスインフォマティクス教育における人工知能（AI）活用とカリキュラム開発の体系的レビュー",
       "url": "https://doi.org/10.2196/19285",
       "posted_at": "2026-09-15 10:14:28"
+    },
+    {
+      "id": "https://doi.org/10.1145/3545945.3569759",
+      "title": "Programming Is Hard - Or at Least It Used to Be",
+      "cited_by_count": 376,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】生成AI時代のプログラミング教育：課題と新たな機会",
+      "url": "https://doi.org/10.1145/3545945.3569759",
+      "posted_at": "2026-09-16 10:05:53"
     }
   ],
   "posted_titles": [
@@ -127,6 +137,7 @@
     "A Survey on Causal Inference",
     "Toward a Phenomenology of Computational Thinking in STEM Education",
     "The Robots Are Coming: Exploring the Implications of OpenAI Codex on Introductory Programming",
-    "Artificial Intelligence Education and Tools for Medical and Health Informatics Students: Systematic Review"
+    "Artificial Intelligence Education and Tools for Medical and Health Informatics Students: Systematic Review",
+    "Programming Is Hard - Or at Least It Used to Be"
   ]
 }
