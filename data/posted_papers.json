@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-16T10:05:53.594170",
-  "total_posted": 13,
+  "last_updated": "2026-09-17T10:05:36.194264",
+  "total_posted": 14,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -9,7 +9,8 @@
     "http://arxiv.org/abs/1801.09258v1",
     "https://doi.org/10.1145/3511861.3511863",
     "https://doi.org/10.2196/19285",
-    "https://doi.org/10.1145/3545945.3569759"
+    "https://doi.org/10.1145/3545945.3569759",
+    "https://doi.org/10.1016/j.compedu.2019.103798"
   ],
   "posts": [
     {
@@ -128,6 +129,15 @@
       "blog_title": "【重要論文】生成AI時代のプログラミング教育：課題と新たな機会",
       "url": "https://doi.org/10.1145/3545945.3569759",
       "posted_at": "2026-09-16 10:05:53"
+    },
+    {
+      "id": "https://doi.org/10.1016/j.compedu.2019.103798",
+      "title": "Assessing computational thinking: A systematic review of empirical studies",
+      "cited_by_count": 631,
+      "source": "OpenAlex",
+      "blog_title": "【実践必読】コンピュテーショナルシンキングをどう評価するか？体系的文献レビューが示す現在地と展望",
+      "url": "https://doi.org/10.1016/j.compedu.2019.103798",
+      "posted_at": "2026-09-17 10:05:36"
     }
   ],
   "posted_titles": [
@@ -138,6 +148,7 @@
     "Toward a Phenomenology of Computational Thinking in STEM Education",
     "The Robots Are Coming: Exploring the Implications of OpenAI Codex on Introductory Programming",
     "Artificial Intelligence Education and Tools for Medical and Health Informatics Students: Systematic Review",
-    "Programming Is Hard - Or at Least It Used to Be"
+    "Programming Is Hard - Or at Least It Used to Be",
+    "Assessing computational thinking: A systematic review of empirical studies"
   ]
 }
