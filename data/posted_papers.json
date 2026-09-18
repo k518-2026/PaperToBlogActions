@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-17T10:05:36.194264",
-  "total_posted": 14,
+  "last_updated": "2026-09-18T10:06:27.529435",
+  "total_posted": 15,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -10,7 +10,8 @@
     "https://doi.org/10.1145/3511861.3511863",
     "https://doi.org/10.2196/19285",
     "https://doi.org/10.1145/3545945.3569759",
-    "https://doi.org/10.1016/j.compedu.2019.103798"
+    "https://doi.org/10.1016/j.compedu.2019.103798",
+    "https://doi.org/10.1145/3623762.3633499"
   ],
   "posts": [
     {
@@ -138,6 +139,15 @@
       "blog_title": "【実践必読】コンピュテーショナルシンキングをどう評価するか？体系的文献レビューが示す現在地と展望",
       "url": "https://doi.org/10.1016/j.compedu.2019.103798",
       "posted_at": "2026-09-17 10:05:36"
+    },
+    {
+      "id": "https://doi.org/10.1145/3623762.3633499",
+      "title": "The Robots Are Here: Navigating the Generative AI Revolution in Computing Education",
+      "cited_by_count": 369,
+      "source": "OpenAlex",
+      "blog_title": "【必須読解】生成AI時代における情報教育の変革：国際調査と倫理的枠組みから探る現場の最前線",
+      "url": "https://doi.org/10.1145/3623762.3633499",
+      "posted_at": "2026-09-18 10:06:27"
     }
   ],
   "posted_titles": [
@@ -149,6 +159,7 @@
     "The Robots Are Coming: Exploring the Implications of OpenAI Codex on Introductory Programming",
     "Artificial Intelligence Education and Tools for Medical and Health Informatics Students: Systematic Review",
     "Programming Is Hard - Or at Least It Used to Be",
-    "Assessing computational thinking: A systematic review of empirical studies"
+    "Assessing computational thinking: A systematic review of empirical studies",
+    "The Robots Are Here: Navigating the Generative AI Revolution in Computing Education"
   ]
 }
