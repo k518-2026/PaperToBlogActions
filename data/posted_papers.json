@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-18T10:06:27.529435",
-  "total_posted": 15,
+  "last_updated": "2026-09-19T10:05:47.365964",
+  "total_posted": 16,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -11,7 +11,8 @@
     "https://doi.org/10.2196/19285",
     "https://doi.org/10.1145/3545945.3569759",
     "https://doi.org/10.1016/j.compedu.2019.103798",
-    "https://doi.org/10.1145/3623762.3633499"
+    "https://doi.org/10.1145/3623762.3633499",
+    "https://doi.org/10.1145/3544548.3580919"
   ],
   "posts": [
     {
@@ -148,6 +149,15 @@
       "blog_title": "【必須読解】生成AI時代における情報教育の変革：国際調査と倫理的枠組みから探る現場の最前線",
       "url": "https://doi.org/10.1145/3623762.3633499",
       "posted_at": "2026-09-18 10:06:27"
+    },
+    {
+      "id": "https://doi.org/10.1145/3544548.3580919",
+      "title": "Studying the effect of AI Code Generators on Supporting Novice Learners in Introductory Programming",
+      "cited_by_count": 345,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】生成AIはプログラミング学習の妨げになるか？初学者への効果と定着度を検証",
+      "url": "https://doi.org/10.1145/3544548.3580919",
+      "posted_at": "2026-09-19 10:05:47"
     }
   ],
   "posted_titles": [
@@ -160,6 +170,7 @@
     "Artificial Intelligence Education and Tools for Medical and Health Informatics Students: Systematic Review",
     "Programming Is Hard - Or at Least It Used to Be",
     "Assessing computational thinking: A systematic review of empirical studies",
-    "The Robots Are Here: Navigating the Generative AI Revolution in Computing Education"
+    "The Robots Are Here: Navigating the Generative AI Revolution in Computing Education",
+    "Studying the effect of AI Code Generators on Supporting Novice Learners in Introductory Programming"
   ]
 }
