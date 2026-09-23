@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-22T10:17:02.884510",
-  "total_posted": 19,
+  "last_updated": "2026-09-23T10:05:34.147544",
+  "total_posted": 20,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -15,7 +15,8 @@
     "https://doi.org/10.1145/3544548.3580919",
     "https://doi.org/10.1016/j.chbah.2023.100005",
     "https://doi.org/10.1016/j.caeai.2022.100049",
-    "https://doi.org/10.1080/10872981.2021.1953953"
+    "https://doi.org/10.1080/10872981.2021.1953953",
+    "https://doi.org/10.1145/3624720"
   ],
   "posts": [
     {
@@ -188,6 +189,15 @@
       "blog_title": "【医療教育とAR】拡張現実がもたらす学習効果と学生の体験価値：最新研究から読み解く教育工学の可能性",
       "url": "https://doi.org/10.1080/10872981.2021.1953953",
       "posted_at": "2026-09-22 10:17:02"
+    },
+    {
+      "id": "https://doi.org/10.1145/3624720",
+      "title": "Computing Education in the Era of Generative AI",
+      "cited_by_count": 295,
+      "source": "OpenAlex",
+      "blog_title": "【重要論文】生成AI時代における情報教育の課題と展望：プログラミング学習の変革",
+      "url": "https://doi.org/10.1145/3624720",
+      "posted_at": "2026-09-23 10:05:34"
     }
   ],
   "posted_titles": [
@@ -204,6 +214,7 @@
     "Studying the effect of AI Code Generators on Supporting Novice Learners in Introductory Programming",
     "Augmented intelligence in programming learning: Examining student views on the use of ChatGPT for programming learning",
     "Artificial intelligence in early childhood education: A scoping review",
-    "Augmented reality in medical education: students’ experiences and learning outcomes"
+    "Augmented reality in medical education: students’ experiences and learning outcomes",
+    "Computing Education in the Era of Generative AI"
   ]
 }
