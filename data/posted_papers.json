@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-24T05:40:32.136081",
-  "total_posted": 21,
+  "last_updated": "2026-09-24T10:14:16.242735",
+  "total_posted": 22,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -17,7 +17,8 @@
     "https://doi.org/10.1016/j.caeai.2022.100049",
     "https://doi.org/10.1080/10872981.2021.1953953",
     "https://doi.org/10.1145/3624720",
-    "https://doi.org/10.1016/j.compedu.2020.103832"
+    "https://doi.org/10.1016/j.compedu.2020.103832",
+    "https://doi.org/10.1145/3545945.3569823"
   ],
   "posts": [
     {
@@ -208,6 +209,15 @@
       "blog_title": "【注目論文】小学校低学年におけるアンプラグド活動を通じたコンピュテーショナル思考の育成",
       "url": "https://doi.org/10.1016/j.compedu.2020.103832",
       "posted_at": "2026-09-24 05:40:32"
+    },
+    {
+      "id": "https://doi.org/10.1145/3545945.3569823",
+      "title": "Conversing with Copilot: Exploring Prompt Engineering for Solving CS1 Problems Using Natural Language",
+      "cited_by_count": 284,
+      "source": "OpenAlex",
+      "blog_title": "【注目論文】プログラミング初学者教育におけるGitHub Copilotとプロンプトエンジニアリングの可能性",
+      "url": "https://doi.org/10.1145/3545945.3569823",
+      "posted_at": "2026-09-24 10:14:16"
     }
   ],
   "posted_titles": [
@@ -226,6 +236,7 @@
     "Artificial intelligence in early childhood education: A scoping review",
     "Augmented reality in medical education: students’ experiences and learning outcomes",
     "Computing Education in the Era of Generative AI",
-    "Computational thinking through unplugged activities in early years of Primary Education"
+    "Computational thinking through unplugged activities in early years of Primary Education",
+    "Conversing with Copilot: Exploring Prompt Engineering for Solving CS1 Problems Using Natural Language"
   ]
 }
