@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-09-24T10:14:16.242735",
-  "total_posted": 22,
+  "last_updated": "2026-09-30T10:12:35.953425",
+  "total_posted": 23,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -18,7 +18,8 @@
     "https://doi.org/10.1080/10872981.2021.1953953",
     "https://doi.org/10.1145/3624720",
     "https://doi.org/10.1016/j.compedu.2020.103832",
-    "https://doi.org/10.1145/3545945.3569823"
+    "https://doi.org/10.1145/3545945.3569823",
+    "http://arxiv.org/abs/2002.06178v1"
   ],
   "posts": [
     {
@@ -218,6 +219,15 @@
       "blog_title": "【注目論文】プログラミング初学者教育におけるGitHub Copilotとプロンプトエンジニアリングの可能性",
       "url": "https://doi.org/10.1145/3545945.3569823",
       "posted_at": "2026-09-24 10:14:16"
+    },
+    {
+      "id": "http://arxiv.org/abs/2002.06178v1",
+      "title": "Programming Paradigms, Turing Completeness and Computational Thinking",
+      "cited_by_count": 0,
+      "source": "arXiv",
+      "blog_title": "【注目論文解説】プログラミングパラダイムの常識を疑う！コンピュテーショナルシンキングとチューリング完全から考える情報教育の本質",
+      "url": "https://arxiv.org/abs/2002.06178v1",
+      "posted_at": "2026-09-30 10:12:35"
     }
   ],
   "posted_titles": [
@@ -237,6 +247,7 @@
     "Augmented reality in medical education: students’ experiences and learning outcomes",
     "Computing Education in the Era of Generative AI",
     "Computational thinking through unplugged activities in early years of Primary Education",
-    "Conversing with Copilot: Exploring Prompt Engineering for Solving CS1 Problems Using Natural Language"
+    "Conversing with Copilot: Exploring Prompt Engineering for Solving CS1 Problems Using Natural Language",
+    "Programming Paradigms, Turing Completeness and Computational Thinking"
   ]
 }
