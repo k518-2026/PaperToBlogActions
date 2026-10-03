@@ -72,6 +72,21 @@
   - Priority 3: Pillow 3カラムグラフィックカード
 - **画像配置の最適化**: WordPress「メールで投稿」が末尾に添付画像を自動挿入する仕様に合わせ、記事本文上部の重複画像を除去。記事末尾の出典カード直下に1枚だけ綺麗に表示されるようレイアウトを最適化。
 
+### (8) Gemini 3.8 Flash移行 & 思考モデル（Thinking Model）JSON出力障害対策 (2026-10-03)
+- **障害事象**:
+  - 定期実行時に `gemini-3.6-flash` が Google バックエンドの需要急増により `503 Service Unavailable` を返却。
+  - 次モデル `gemini-3.7-flash` へのフォールバック時に `TypeError: the JSON object must be str, bytes or bytearray, not NoneType` が発生しパイプライン全体が停止。
+  - Interactions API フォールバック時にもスキーマ定義不足により Pydantic の `PaperSummaryModel` バリデーションエラー（必須フィールド欠落等）が発生。
+- **原因分析**:
+  - `gemini-3.7-flash` はデフォルトで拡張思考（Extended Thinking / `part.thought=True`）が有効化されており、SDKの `response.text` プロパティが思考パートを除外した結果 `None` となり、`json.loads(response.text)` がクラッシュ。
+  - Interactions API では構造化スキーマがプロンプトへ渡されておらず、モデルがフィールド名を改変（例: `blog_title` → `title`）したり、文字列フィールドに辞書/リストを返却。
+- **恒久対策・改善内容**:
+  1. **標準モデルの刷新**: 安定稼働かつ高速な最新フラグシップ `gemini-3.8-flash` を標準採用（`src/config.py`, `src/summarizer.py`, `.github/workflows/paper_to_blog.yml`）。
+  2. **思考トークンの制御**: `types.GenerateContentConfig` に `thinking_config=types.ThinkingConfig(thinking_budget=0)` および `max_output_tokens=8192` を明示設定。JSON生成時の思考モード干渉を完全抑止。
+  3. **安全なコンテンツ抽出**: `response.text` が None の場合でも `candidates[0].content.parts` から通常テキストを抽出し、Markdownフェンス（` ```json `）を安全に除去するロジックを追加。
+  4. **Interactions APIのスキーマ注入**: フォールバックプロンプトに `PaperSummaryModel.model_json_schema()` を埋め込み、モデルに厳密なキーと型を出力させるよう強化。
+  5. **Pydanticモデルの耐障害性強化**: `PaperSummaryModel` にフィールドバリデータ・モデルバリデータを追加し、キーの揺らぎ（`title` → `blog_title` 等）や型の自動変換（リスト/辞書の文字列化、デフォルト値補完）を実装。
+
 ---
 
 ## 3. 運用・保守手順
@@ -88,4 +103,5 @@ GitHubリポジトリの **[Settings > Secrets and variables > Actions](https://
 2. **「Auto Post Research Papers to WordPress」** ワークフローを選択。
 3. **「Run workflow」** プルダウンを開き、`dry_run: true` を選んで実行。
    - メール送信を行わずに、要約本文やインフォグラフィック生成、Wikipediaリンク検証の結果を確認できます。
+
 
