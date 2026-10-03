@@ -10,6 +10,17 @@ from .summarizer import PaperSummarizer, PaperSummaryModel
 from .image_generator import GeminiImageGenerator
 from .mail_poster import WordPressMailPoster
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,

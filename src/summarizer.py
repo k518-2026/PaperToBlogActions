@@ -1,6 +1,7 @@
 import logging
 import json
 import re
+import time
 import urllib.parse
 import urllib.request
 import ssl
@@ -110,13 +111,6 @@ class PaperSummaryModel(BaseModel):
                 data[new_k] = data[old_k]
         return data
 
-
-class PaperSummarizer:
-    """
-    Summarizes academic papers using Gemini, adhering strictly to the Ochiai 7-point format
-    with 150-300 characters per viewpoint, Wikipedia hyperlinks on technical terms,
-    and a structured 3-column educational infographic prompt based on the user's sample.
-    """
 
 class WikipediaValidator:
     """
@@ -268,14 +262,19 @@ class PaperSummarizer:
    7つの観点（1〜6の各項目）は、必ず【150文字以上300文字以内】の分量で丁寧に解説してください。
    箇条書きだけに頼らず、読み応えのある論理的な文章で執筆してください。
 
-2. 【専門用語へのWikipediaリンク付与（実在記事のみ厳選）】:
+2. 【著作権保護・盗用防止規則（完全パラフレーズ・Recitation回避の徹底）】:
+   - 原文アブストラクトの英文をそのままコピー＆ペースト、逐語訳、または過度に酷似した表現で出力することは【厳禁】です。
+   - すべての解説文は、読者である日本の教育実践者（小中高校の教員、教育委員会関係者）に向け、完全にあなた自身の自然な日本語の表現として解説・翻案・再構成（パラフレーズ）して執筆してください。
+   - 観点7の引用表記（point7_apa_citation）についても、機械的な著作権テキストの転載ではなく、「著者名 (出版年). 論文名. 学術誌/リポジトリ名.」という簡潔な書誌要約として記載してください。
+
+3. 【専門用語へのWikipediaリンク付与（実在記事のみ厳選）】:
    文中に登場する教育学・情報科学・心理学等の専門用語には、読者の学習を促すため、日本語版Wikipediaへのハイパーリンクを付与してください。
    【最重要要件】: 必ず【日本語版Wikipediaに独立した解説記事（または転送記事）が実在する確実な項目名】のみリンクを付与してください。
    存在しない複合語、機械翻訳による不自然な造語、日本語版Wikipediaに項目があるか確証が持てない用語には【絶対にリンクを貼らず】、通常のテキストのまま記述してください。
    （実在が確認されている代表的な項目の例: 情報教育、教育工学、アクティブ・ラーニング、形成的評価、認知負荷、メタ認知、グループ学習、STEM教育、生成的人工知能、大規模言語モデル、自然言語処理、機械学習、ディープラーニング など）
    フォーマット: <a href="https://ja.wikipedia.org/wiki/正確な項目名" target="_blank" rel="noopener noreferrer">用語名</a>
 
-3. 【内容をまとめた1枚のイラスト（インフォグラフィック構成）】:
+4. 【内容をまとめた1枚のイラスト（インフォグラフィック構成）】:
    単なる抽象的・装飾的なアイキャッチではなく、「論文の要点を1枚で視覚的に伝える教育インフォグラフィック（グラフィックレコーディング風の解説シート）」を生成するためのプロンプトを設計してください。
    構成は以下の通りです：
    - 上部ヘッダー帯: 論文の核心テーマを示す日本語タイトル（infographic_title）
@@ -284,7 +283,7 @@ class PaperSummarizer:
    - 右カラム ③: 実践の成果と留意点（セキュリティ・プライバシー、定性と定量のバランス、支援の留意点）
    - 全体スタイル: 日本の教育教材・学習マンガ・グラレコ風の親しみやすい図解イラスト、清潔感のある配色、丸角カードパネル、アスペクト比 16:9。
 
-4. 【Unsplash写真検索用キーワード（unsplash_keywords）】:
+5. 【Unsplash写真検索用キーワード（unsplash_keywords）】:
    論文のテーマに最も関連する教育・IT・教室の美しい写真をUnsplashで検索するための英単語を2〜3語出力してください（例: "programming classroom", "robotics students", "artificial intelligence learning", "students computer coding"）。
 """
 
@@ -318,7 +317,8 @@ class PaperSummarizer:
 URL: {paper.get('url')}
 ソース: {paper.get('source')}
 
-【アブストラクト（抄録）】
+【論文の背景・概要コンテキスト（参考情報）】
+※以下の内容は背景理解のための参考情報です。出力時はこの英文を直訳せず、教育現場で役立つあなた自身の自然な日本語で要約・考察を記述してください。
 {paper.get('abstract')}
 """
 
@@ -326,6 +326,8 @@ URL: {paper.get('url')}
             self.model_name,
             "gemini-3.8-flash",
             "gemini-3.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
             "gemini-3.7-flash",
             "gemini-3.6-flash"
         ]
@@ -337,22 +339,52 @@ URL: {paper.get('url')}
         last_error = None
         for model in models_to_try:
             logger.info(f"Attempting Gemini summarization with model: {model}")
-            # Method 1: generate_content with thinking disabled & high output token allowance
+
+            from google.genai import types
+            thinking_config = None
+            if any(k in model for k in ["3.7", "3.8"]):
+                thinking_config = types.ThinkingConfig(thinking_level="low")
+            elif "lite" not in model and any(k in model for k in ["3.5", "3.6"]):
+                thinking_config = types.ThinkingConfig(thinking_level="minimal")
+
+            config_args = {
+                "system_instruction": self.SYSTEM_INSTRUCTION,
+                "response_mime_type": "application/json",
+                "response_schema": PaperSummaryModel,
+                "max_output_tokens": 8192,
+                "temperature": 1.0,
+            }
+            if thinking_config:
+                config_args["thinking_config"] = thinking_config
+
+            # Method 1: generate_content
             try:
-                from google.genai import types
-                gen_config = types.GenerateContentConfig(
-                    system_instruction=self.SYSTEM_INSTRUCTION,
-                    response_mime_type="application/json",
-                    response_schema=PaperSummaryModel,
-                    temperature=0.3,
-                    max_output_tokens=8192,
-                    thinking_config=types.ThinkingConfig(thinking_budget=0)
-                )
-                response = self.client.models.generate_content(
-                    model=model,
-                    contents=prompt_content,
-                    config=gen_config
-                )
+                try:
+                    response = self.client.models.generate_content(
+                        model=model,
+                        contents=prompt_content,
+                        config=types.GenerateContentConfig(**config_args)
+                    )
+                except Exception as gen_err:
+                    err_msg = str(gen_err)
+                    # If 503 Service Unavailable / high demand, immediately advance to next candidate model
+                    if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg.lower():
+                        logger.warning(f"Model {model} returned 503 high demand: {gen_err}. Skipping immediately to next model...")
+                        last_error = gen_err
+                        time.sleep(2)
+                        continue
+
+                    # If 400 INVALID_ARGUMENT (e.g. thinking_config unsupported on model), retry without thinking_config
+                    if "INVALID_ARGUMENT" in err_msg or "400" in err_msg:
+                        logger.info(f"Model {model} rejected config: {gen_err}. Retrying generate_content without thinking_config...")
+                        config_args.pop("thinking_config", None)
+                        response = self.client.models.generate_content(
+                            model=model,
+                            contents=prompt_content,
+                            config=types.GenerateContentConfig(**config_args)
+                        )
+                    else:
+                        raise gen_err
 
                 raw_json = getattr(response, "text", None)
                 if not raw_json and getattr(response, "candidates", None) and response.candidates:
@@ -383,9 +415,16 @@ URL: {paper.get('url')}
 
                 result_dict = json.loads(clean_json)
                 summary = PaperSummaryModel(**result_dict)
+                self._ensure_citation(summary, paper)
                 logger.info(f"Successfully summarized paper using model: {model}")
                 return self.post_process_links(summary)
             except Exception as e:
+                err_str = str(e)
+                if "503" in err_str or "UNAVAILABLE" in err_str:
+                    logger.warning(f"Model {model} is 503 unavailable. Skipping interactions API and moving to next model...")
+                    last_error = e
+                    continue
+
                 logger.warning(f"generate_content with {model} failed: {e}. Trying interactions API...")
                 # Method 2: interactions API fallback
                 try:
@@ -422,14 +461,27 @@ URL: {paper.get('url')}
 
                     result_dict = json.loads(clean_out)
                     summary = PaperSummaryModel(**result_dict)
+                    self._ensure_citation(summary, paper)
                     logger.info(f"Successfully summarized paper using interactions API ({model})")
                     return self.post_process_links(summary)
                 except Exception as e2:
                     logger.warning(f"Interactions API with {model} failed: {e2}")
-                last_error = e
+                    last_error = e2
+                if last_error is None:
+                    last_error = e
 
         logger.error(f"All Gemini models failed for summarization. Last error: {last_error}")
         raise last_error
+
+    @staticmethod
+    def _ensure_citation(summary: PaperSummaryModel, paper: Dict[str, Any]) -> None:
+        """Ensures that point7_apa_citation is cleanly populated without triggering copyright filters."""
+        if not summary.point7_apa_citation or "Author et al." in summary.point7_apa_citation:
+            authors_str = ", ".join(paper.get("authors", [])) if paper.get("authors") else "Unknown"
+            year = paper.get("published_year") or (paper.get("published_date", "")[:4] if paper.get("published_date") else "") or "n.d."
+            title = paper.get("title", "")
+            url = paper.get("url", "")
+            summary.point7_apa_citation = f"{authors_str} ({year}). {title}. {url}".strip()
 
     @classmethod
     def post_process_links(cls, summary: PaperSummaryModel) -> PaperSummaryModel:
