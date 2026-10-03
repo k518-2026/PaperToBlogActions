@@ -106,11 +106,11 @@ GitHub Actionsが投稿履歴（`data/posted_papers.json` および `data/POSTED
 ## ⏰ 定期実行スケジュールと手動実行
 
 ### 自動実行（cron）
-毎日 **日本時間 19:00（UTC 10:00）** に自動実行されます。
+毎日 **日本時間 朝4:20（UTC 19:20）** に自動実行されます。
 実行時間を変更したい場合は、`.github/workflows/paper_to_blog.yml` の cron 式を編集してください：
 ```yaml
 schedule:
-  - cron: '0 10 * * *'  # 10:00 UTC = 19:00 JST（毎晩19時）
+  - cron: '20 19 * * *'  # 19:20 UTC = 04:20 JST（毎朝4時20分）
 ```
 
 ### 手動実行（テスト実行）
