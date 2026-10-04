@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-10-03T22:11:14.003864",
-  "total_posted": 24,
+  "last_updated": "2026-10-04T22:22:13.843631",
+  "total_posted": 25,
   "posted_ids": [
     "https://doi.org/10.1016/j.caeai.2023.100147",
     "https://doi.org/10.1145/3501385.3543957",
@@ -20,7 +20,8 @@
     "https://doi.org/10.1016/j.compedu.2020.103832",
     "https://doi.org/10.1145/3545945.3569823",
     "http://arxiv.org/abs/2002.06178v1",
-    "http://arxiv.org/abs/2412.14180v1"
+    "http://arxiv.org/abs/2412.14180v1",
+    "https://doi.org/10.1109/access.2021.3097962"
   ],
   "posts": [
     {
@@ -238,6 +239,15 @@
       "blog_title": "【注目論文】Code.orgを活用した初等プログラミング教育が学習意欲とコンピュテーショナル思考に与える影響",
       "url": "https://arxiv.org/abs/2412.14180v1",
       "posted_at": "2026-10-03 22:11:14"
+    },
+    {
+      "id": "https://doi.org/10.1109/access.2021.3097962",
+      "title": "Teaching Machine Learning in K–12 Classroom: Pedagogical and Technological Trajectories for Artificial Intelligence Education",
+      "cited_by_count": 270,
+      "source": "OpenAlex",
+      "blog_title": "【徹底解説】初等中等教育における機械学習教育：AI時代に必要な新たな指導法とパラダイムシフト",
+      "url": "https://doi.org/10.1109/access.2021.3097962",
+      "posted_at": "2026-10-04 22:22:13"
     }
   ],
   "posted_titles": [
@@ -259,6 +269,7 @@
     "Computational thinking through unplugged activities in early years of Primary Education",
     "Conversing with Copilot: Exploring Prompt Engineering for Solving CS1 Problems Using Natural Language",
     "Programming Paradigms, Turing Completeness and Computational Thinking",
-    "The Influence and Relationship between Computational Thinking, Learning Motivation, Attitude, and Achievement of Code.org in K-12 Programming Education"
+    "The Influence and Relationship between Computational Thinking, Learning Motivation, Attitude, and Achievement of Code.org in K-12 Programming Education",
+    "Teaching Machine Learning in K–12 Classroom: Pedagogical and Technological Trajectories for Artificial Intelligence Education"
   ]
 }
