@@ -1,9 +1,9 @@
 name: Auto Post Research Papers to WordPress
 
 on:
-  # Daily scheduled run (19:20 UTC = 04:20 JST / 毎朝4時20分)
-  schedule:
-    - cron: '20 19 * * *'
+  # Daily scheduled run (19:20 UTC = 04:20 JST / 毎朝4時20分) - 一時停止中（再開時にコメント解除）
+  # schedule:
+  #   - cron: '20 19 * * *'
 
   # Manual execution from GitHub Actions UI
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
         description: 'Dry run (Simulate without sending email or updating history)'
         type: boolean
         required: false
-        default: false
+        default: true
       force:
         description: 'Force run (Ignore posted history and pick newest paper)'
         type: boolean
