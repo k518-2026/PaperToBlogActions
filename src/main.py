@@ -121,13 +121,16 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
         photo_info=photo_info
     )
 
+    # Sanitize HTML for email delivery (strip <a href="..."> links to prevent anti-phishing/spam triggers, convert to plain DOI notation)
+    clean_html_content = WordPressMailPoster.sanitize_html_for_email(html_content)
+
     # 4. Post to WordPress by Email
     logger.info("--- Step 4: Posting to WordPress ---")
     if dry_run:
         logger.info("[DRY RUN] Email sending skipped.")
         preview_file = temp_dir / "preview_post.html"
         with open(preview_file, "w", encoding="utf-8") as f:
-            f.write(f"<h1>{summary.blog_title}</h1>\n{html_content}")
+            f.write(f"<h1>{summary.blog_title}</h1>\n{clean_html_content}")
         logger.info(f"[DRY RUN] HTML preview saved to: {preview_file}")
         logger.info(f"[DRY RUN] Infographic image saved to: {generated_img_path}")
         return True
@@ -147,7 +150,7 @@ def run_pipeline(dry_run: bool = False, force: bool = False, selected_topic: str
 
     poster.send_post(
         title=summary.blog_title,
-        html_content=html_content,
+        html_content=clean_html_content,
         image_path=generated_img_path
     )
 

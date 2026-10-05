@@ -579,9 +579,18 @@ URL: {paper.get('url')}
 </div>
 """)
 
-        # Original source link footer
+        # Original source info footer (plain text notation without <a href="...">)
         paper_url = paper.get("url", "")
-        if paper_url:
+        doi_val = paper.get("doi", "") or paper_url
+        clean_doi = ""
+        if doi_val and "10." in doi_val:
+            match = re.search(r"(10\.[^\s<>\"\)\]】』]+)", doi_val)
+            if match:
+                clean_doi = match.group(1)
+
+        doi_display = f"DOI: {clean_doi}" if clean_doi else paper_url
+
+        if paper_url or clean_doi:
             source_name = paper.get("source", "学術データベース")
             effective_attribution = photo_attribution
             if not effective_attribution and photo_info and hasattr(photo_info, "attribution_html"):
@@ -596,7 +605,7 @@ URL: {paper.get('url')}
             html_parts.append(f"""
 <div style="margin-top: 36px; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
     <p style="margin: 0 0 8px 0; font-size: 0.95em; color: #475569;">
-        🔗 <strong>原文・DOIリンク:</strong> <a href="{paper_url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; word-break: break-all;">{paper_url}</a>
+        🔗 <strong>原文・DOI:</strong> <span style="font-family: monospace, sans-serif; color: #1e293b; font-weight: bold;">{doi_display}</span>
     </p>
     <p style="margin: 0; font-size: 0.9em; color: #64748b;">
         📈 <strong>記事作成時の被引用数:</strong> {citations:,} 回（{source_name} 調べ）
